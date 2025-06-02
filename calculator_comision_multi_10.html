@@ -2,17 +2,79 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision Agent - Corectat</title>
+    <title>Calculator Comision Agent - Modern</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .credit-entry { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-        input, select { margin: 5px; padding: 5px; }
-        button { margin: 10px; padding: 10px; }
-        .result { margin-top: 15px; font-weight: bold; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            margin: 20px;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .credit-entry {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        input, select {
+            width: calc(100% - 20px);
+            margin: 5px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        @media (max-width: 600px) {
+            input, select, button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Corectat</h2>
+    <h2>Calculator Comision Agent - Modern</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -22,19 +84,34 @@
         let count = 0;
 
         const grilaDetaliata = {
-            'BCR': { 'IP': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: 2400000, procent: 1.0 }, { prag: 5000000, procent: 1.2 }, { prag: 50000000, procent: 1.4 }, { prag: Infinity, procent: 1.8 }], 'NP': [{ prag: Infinity, procent: 1.2 }], 'REF NP': [{ prag: Infinity, procent: 1.0 }] },
-            'GARANTI': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'NP': [{ prag: Infinity, procent: 1.2 }], 'REF IP': [{ prag: Infinity, procent: 0.4 }], 'REF NP': [{ prag: Infinity, procent: 1.2 }] },
+            'BCR': { 'IP': [{ prag: Infinity, procent: 1.8 }], 'REF NP': [{ prag: Infinity, procent: 1.0 }] },
+            'GARANTI': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'REF NP': [{ prag: Infinity, procent: 1.2 }] },
             'BT': { 'IP': [{ prag: Infinity, procent: 0.8 }], 'REF IP': [{ prag: Infinity, procent: 0.8 }] },
             'FIRST': { 'NP': [{ prag: Infinity, procent: 1.0 }] },
             'UCFIN': { 'REF NP': [{ prag: Infinity, procent: 2.0 }] },
             'ALPHA': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
             'ING': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
-            'UNICREDIT': { 'IP': [{ prag: Infinity, procent: 1.2 }] },
+            'UNICREDIT': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'REF IP': [{ prag: Infinity, procent: 1.2 }] },
             'RAIF': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
             'BRD': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
             'LIBRA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
             'PATRIA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
             'CREDIT EUROPE': { 'IP': [{ prag: Infinity, procent: 1.0 }] }
+        };
+
+        const tipuriPermise = {
+            'ALPHA': ['IP'],
+            'UNICREDIT': ['IP', 'REF IP'],
+            'GARANTI': ['IP', 'NP', 'REF IP', 'REF NP'],
+            'BCR': ['IP', 'REF NP'],
+            'UCFIN': ['REF NP'],
+            'FIRST': ['NP'],
+            'BT': ['IP', 'REF IP'],
+            'RAIF': ['IP'],
+            'BRD': ['IP'],
+            'LIBRA': ['IP'],
+            'PATRIA': ['IP'],
+            'CREDIT EUROPE': ['IP']
         };
 
         function adaugaCredit() {
@@ -71,30 +148,27 @@
 
         function calculeazaToate() {
             let total = 0;
-            let rezultatHTML = '<h3>Rezultate</h3><table border="1"><tr><th>Nr</th><th>Nume Client</th><th>Banca</th><th>Tip Credit</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
-            
+            let rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume Client</th><th>Banca</th><th>Tip Credit</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
+
             for (let i = 1; i <= count; i++) {
                 const nume = document.getElementById(`nume_${i}`).value || "N/A";
                 const banca = document.getElementById(`banca_${i}`).value;
                 const tipCredit = document.getElementById(`tip_credit_${i}`).value;
                 const suma = parseFloat(document.getElementById(`suma_${i}`).value) || 0;
                 const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
-                
-                let categorie = sursa.includes('teocredit') ? 'CATEGORIA 2' :
-                                sursa.includes('agent') ? 'CATEGORIA 3' : 'CATEGORIA 1';
+
+                if (!tipuriPermise[banca] || !tipuriPermise[banca].includes(tipCredit)) {
+                    rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>INVALID</td><td>Combinație interzisă</td></tr>`;
+                    continue;
+                }
 
                 let procent = 0;
-                if (categorie === 'CATEGORIA 2' || categorie === 'CATEGORIA 3') {
-                    procent = 0.4;  // 0.4% fix pentru Categoria 2 și Categoria 3
-                } else {
+                let categorie = sursa.includes('teocredit') ? 'CATEGORIA 2' : sursa.includes('agent') ? 'CATEGORIA 3' : 'CATEGORIA 1';
+                if (categorie === 'CATEGORIA 2' || categorie === 'CATEGORIA 3') procent = 0.4;
+                else {
                     const bancaInfo = grilaDetaliata[banca] || {};
                     const praguri = bancaInfo[tipCredit] || [];
-                    for (let p of praguri) {
-                        if (suma <= p.prag) {
-                            procent = p.procent;
-                            break;
-                        }
-                    }
+                    for (let p of praguri) if (suma <= p.prag) { procent = p.procent; break; }
                 }
 
                 if (banca === 'PATRIA' && procent > 0) {
@@ -104,10 +178,7 @@
                     continue;
                 }
 
-                if (banca === 'UNICREDIT' && suma < 250000) {
-                    procent = 0;
-                }
-
+                if (banca === 'UNICREDIT' && suma < 250000) procent = 0;
                 const comision = (suma * procent / 100).toFixed(2);
                 total += parseFloat(comision);
                 rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
