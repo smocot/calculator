@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision Agent</title>
+    <title>Calculator Comision Agent - Versiune Finală</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -74,7 +75,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Modern</h2>
+    <h2>Calculator Comision Agent - Versiune Finală</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -83,35 +84,20 @@
     <script>
         let count = 0;
 
-        const grilaDetaliata = {
-            'BCR': { 'IP': [{ prag: Infinity, procent: 1.8 }], 'REF NP': [{ prag: Infinity, procent: 1.0 }] },
-            'GARANTI': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'REF NP': [{ prag: Infinity, procent: 1.2 }] },
-            'BT': { 'IP': [{ prag: Infinity, procent: 0.8 }], 'REF IP': [{ prag: Infinity, procent: 0.8 }] },
-            'FIRST': { 'NP': [{ prag: Infinity, procent: 1.0 }] },
-            'UCFIN': { 'REF NP': [{ prag: Infinity, procent: 2.0 }] },
-            'ALPHA': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
-            'ING': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
-            'UNICREDIT': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'REF IP': [{ prag: Infinity, procent: 1.2 }] },
-            'RAIF': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
-            'BRD': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
-            'LIBRA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
-            'PATRIA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
-            'CREDIT EUROPE': { 'IP': [{ prag: Infinity, procent: 1.0 }] }
-        };
-
-        const tipuriPermise = {
-            'ALPHA': ['IP'],
-            'UNICREDIT': ['IP', 'REF IP'],
-            'GARANTI': ['IP', 'NP', 'REF IP', 'REF NP'],
-            'BCR': ['IP', 'REF NP'],
-            'UCFIN': ['REF NP'],
-            'FIRST': ['NP'],
-            'BT': ['IP', 'REF IP'],
-            'RAIF': ['IP'],
-            'BRD': ['IP'],
-            'LIBRA': ['IP'],
-            'PATRIA': ['IP'],
-            'CREDIT EUROPE': ['IP']
+        const reguli = {
+            'BCR': { praguri: [{ prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }], ref_np: 1.0 },
+            'GARANTI': { praguri: [{ prag: Infinity, procent: 1.2 }], ref_np: 1.2 },
+            'UNICREDIT': { praguri: [{ prag: Infinity, procent: 1.2 }], ref_ip: 1.2 },
+            'BT': { praguri: [{ prag: Infinity, procent: 0.8 }], ref_ip: 0.8 },
+            'PATRIA': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'ALPHA': { praguri: [{ prag: Infinity, procent: 0.4 }] },
+            'ING': { praguri: [{ prag: Infinity, procent: 0.4 }] },
+            'RAIF': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'BRD': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'LIBRA': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'FIRST': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'CREDIT EUROPE': { praguri: [{ prag: Infinity, procent: 1.0 }] },
+            'UCFIN': { praguri: [{ prag: Infinity, procent: 2.0 }] }
         };
 
         function adaugaCredit() {
@@ -124,9 +110,7 @@
                 <label>Nume Client:</label>
                 <input type="text" id="nume_${count}" placeholder="Introduceți numele clientului"><br>
                 <label>Banca:</label>
-                <select id="banca_${count}">
-                    ${Object.keys(grilaDetaliata).map(b => `<option value="${b}">${b}</option>`).join('')}
-                </select><br>
+                <select id="banca_${count}">${Object.keys(reguli).map(b => `<option value="${b}">${b}</option>`).join('')}</select><br>
                 <label>Tip Credit:</label>
                 <select id="tip_credit_${count}">
                     <option value="IP">IP</option>
@@ -141,8 +125,7 @@
                     <option value="Recomandari">Recomandari</option>
                     <option value="TeoCredit">TeoCredit</option>
                     <option value="Agent Imobiliar">Agent Imobiliar</option>
-                </select><br>
-            `;
+                </select><br>`;
             container.appendChild(entry);
         }
 
@@ -153,39 +136,29 @@
             for (let i = 1; i <= count; i++) {
                 const nume = document.getElementById(`nume_${i}`).value || "N/A";
                 const banca = document.getElementById(`banca_${i}`).value;
-                const tipCredit = document.getElementById(`tip_credit_${i}`).value;
+                const tip = document.getElementById(`tip_credit_${i}`).value;
                 const suma = parseFloat(document.getElementById(`suma_${i}`).value) || 0;
                 const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
-
-                if (!tipuriPermise[banca] || !tipuriPermise[banca].includes(tipCredit)) {
-                    rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>INVALID</td><td>Combinație interzisă</td></tr>`;
-                    continue;
-                }
-
                 let procent = 0;
-                let categorie = sursa.includes('teocredit') ? 'CATEGORIA 2' : sursa.includes('agent') ? 'CATEGORIA 3' : 'CATEGORIA 1';
-                if (categorie === 'CATEGORIA 2' || categorie === 'CATEGORIA 3') procent = 0.4;
+
+                if (sursa.includes("teocredit") || sursa.includes("agent")) procent = 0.4;
+                else if (tip === "REF NP" && reguli[banca].ref_np) procent = reguli[banca].ref_np;
+                else if (tip === "REF IP" && reguli[banca].ref_ip) procent = reguli[banca].ref_ip;
                 else {
-                    const bancaInfo = grilaDetaliata[banca] || {};
-                    const praguri = bancaInfo[tipCredit] || [];
-                    for (let p of praguri) if (suma <= p.prag) { procent = p.procent; break; }
+                    for (let p of reguli[banca].praguri) {
+                        if (suma <= p.prag) { procent = p.procent; break; }
+                    }
                 }
 
-                if (banca === 'PATRIA' && procent > 0) {
-                    const plafon = Math.min(suma * procent / 100, 10000);
-                    total += plafon;
-                    rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${plafon.toFixed(2)} RON (Plafon)</td></tr>`;
-                    continue;
-                }
+                if (banca === "PATRIA") procent = Math.min(suma * procent / 100, 10000) / suma * 100;
+                if (banca === "UNICREDIT" && suma < 250000) procent = 0;
 
-                if (banca === 'UNICREDIT' && suma < 250000) procent = 0;
                 const comision = (suma * procent / 100).toFixed(2);
                 total += parseFloat(comision);
-                rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
+                rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tip}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
             }
-
             rezultatHTML += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
-            document.getElementById('rezultate').innerHTML = rezultatHTML;
+            document.getElementById("rezultate").innerHTML = rezultatHTML;
         }
     </script>
 </body>
