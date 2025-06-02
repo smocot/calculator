@@ -1,81 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision Agent - Versiune Finală</title>
+    <title>Calculator Comision Agent</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-            margin: 20px;
-            color: #333;
-        }
-        h2 {
-            text-align: center;
-            color: #4CAF50;
-        }
-        .credit-entry {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        input, select {
-            width: calc(100% - 20px);
-            margin: 5px 0;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            margin: 10px 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .result {
-            margin-top: 20px;
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        @media (max-width: 600px) {
-            input, select, button {
-                width: 100%;
-            }
-        }
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 20px; color: #333; }
+        h2 { text-align: center; color: #4CAF50; }
+        .credit-entry { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; margin-bottom: 15px; }
+        input, select { width: calc(100% - 20px); margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #45a049; }
+        .result { margin-top: 20px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Versiune Finală</h2>
+    <h2>Calculator Comision Agent - Final Corect</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -83,21 +27,20 @@
 
     <script>
         let count = 0;
-
-        const reguli = {
-            'BCR': { praguri: [{ prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }], ref_np: 1.0 },
-            'GARANTI': { praguri: [{ prag: Infinity, procent: 1.2 }], ref_np: 1.2 },
-            'UNICREDIT': { praguri: [{ prag: Infinity, procent: 1.2 }], ref_ip: 1.2 },
-            'BT': { praguri: [{ prag: Infinity, procent: 0.8 }], ref_ip: 0.8 },
-            'PATRIA': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'ALPHA': { praguri: [{ prag: Infinity, procent: 0.4 }] },
-            'ING': { praguri: [{ prag: Infinity, procent: 0.4 }] },
-            'RAIF': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'BRD': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'LIBRA': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'FIRST': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'CREDIT EUROPE': { praguri: [{ prag: Infinity, procent: 1.0 }] },
-            'UCFIN': { praguri: [{ prag: Infinity, procent: 2.0 }] }
+        const praguri = {
+            'BCR': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }],
+            'GARANTI': [{ prag: Infinity, procent: 1.2 }],
+            'UNICREDIT': [{ prag: Infinity, procent: 1.2 }],
+            'BT': [{ prag: Infinity, procent: 0.8 }],
+            'PATRIA': [{ prag: Infinity, procent: 1.0 }],
+            'ALPHA': [{ prag: Infinity, procent: 0.4 }],
+            'ING': [{ prag: Infinity, procent: 0.4 }],
+            'RAIF': [{ prag: Infinity, procent: 1.0 }],
+            'BRD': [{ prag: Infinity, procent: 1.0 }],
+            'LIBRA': [{ prag: Infinity, procent: 1.0 }],
+            'FIRST': [{ prag: Infinity, procent: 1.0 }],
+            'CREDIT EUROPE': [{ prag: Infinity, procent: 1.0 }],
+            'UCFIN': [{ prag: Infinity, procent: 2.0 }]
         };
 
         function adaugaCredit() {
@@ -110,13 +53,13 @@
                 <label>Nume Client:</label>
                 <input type="text" id="nume_${count}" placeholder="Introduceți numele clientului"><br>
                 <label>Banca:</label>
-                <select id="banca_${count}">${Object.keys(reguli).map(b => `<option value="${b}">${b}</option>`).join('')}</select><br>
+                <select id="banca_${count}">
+                    ${Object.keys(praguri).map(b => `<option value="${b}">${b}</option>`).join('')}
+                </select><br>
                 <label>Tip Credit:</label>
                 <select id="tip_credit_${count}">
                     <option value="IP">IP</option>
-                    <option value="NP">NP</option>
                     <option value="REF IP">REF IP</option>
-                    <option value="REF NP">REF NP</option>
                 </select><br>
                 <label>Suma Credit (RON):</label>
                 <input type="number" id="suma_${count}" placeholder="Introduceți suma"><br>
@@ -130,35 +73,35 @@
         }
 
         function calculeazaToate() {
-            let total = 0;
-            let rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume Client</th><th>Banca</th><th>Tip Credit</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
+            const totalPeBanca = {};
+            const date = [];
 
             for (let i = 1; i <= count; i++) {
-                const nume = document.getElementById(`nume_${i}`).value || "N/A";
                 const banca = document.getElementById(`banca_${i}`).value;
-                const tip = document.getElementById(`tip_credit_${i}`).value;
                 const suma = parseFloat(document.getElementById(`suma_${i}`).value) || 0;
                 const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
-                let procent = 0;
+                const tip = document.getElementById(`tip_credit_${i}`).value;
+                if (!totalPeBanca[banca]) totalPeBanca[banca] = 0;
+                if (sursa !== "teocredit") totalPeBanca[banca] += suma;
+                date.push({ i, banca, suma, sursa, tip, nume: document.getElementById(`nume_${i}`).value || "N/A" });
+            }
 
-                if (sursa.includes("teocredit") || sursa.includes("agent")) procent = 0.4;
-                else if (tip === "REF NP" && reguli[banca].ref_np) procent = reguli[banca].ref_np;
-                else if (tip === "REF IP" && reguli[banca].ref_ip) procent = reguli[banca].ref_ip;
+            let total = 0, rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
+            date.forEach(d => {
+                let procent = 0;
+                if (d.sursa.includes("teocredit")) procent = 0.4;
                 else {
-                    for (let p of reguli[banca].praguri) {
-                        if (suma <= p.prag) { procent = p.procent; break; }
+                    for (let p of praguri[d.banca]) {
+                        if (totalPeBanca[d.banca] <= p.prag) { procent = p.procent; break; }
                     }
                 }
-
-                if (banca === "PATRIA") procent = Math.min(suma * procent / 100, 10000) / suma * 100;
-                if (banca === "UNICREDIT" && suma < 250000) procent = 0;
-
-                const comision = (suma * procent / 100).toFixed(2);
+                if (d.banca === 'UNICREDIT' && d.suma < 250000) procent = 0;
+                const comision = (d.suma * procent / 100).toFixed(2);
                 total += parseFloat(comision);
-                rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tip}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
-            }
+                rezultatHTML += `<tr><td>${d.i}</td><td>${d.nume}</td><td>${d.banca}</td><td>${d.tip}</td><td>${d.suma}</td><td>${d.sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
+            });
             rezultatHTML += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
-            document.getElementById("rezultate").innerHTML = rezultatHTML;
+            document.getElementById('rezultate').innerHTML = rezultatHTML;
         }
     </script>
 </body>
