@@ -2,13 +2,14 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision</title>
+    <title>Calculator Comision - Blocare câmpuri și 2 înregistrări pe rând</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 20px; color: #333; }
         h2 { text-align: center; color: #4CAF50; }
-        .credit-entry { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; margin-bottom: 15px; }
-        input, select { width: calc(100% - 20px); margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .row { display: flex; flex-wrap: wrap; }
+        .credit-entry { flex: 0 0 48%; margin: 1%; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; }
+        input, select { width: 100%; margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
         button { background-color: #4CAF50; color: white; padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
         button:hover { background-color: #45a049; }
         .result { margin-top: 20px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -19,8 +20,8 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision</h2>
-    <div id="credits-container"></div>
+    <h2>Calculator Comision - Blocare și 2 Înregistrări pe Rând</h2>
+    <div class="row" id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
     <div class="result" id="rezultate"></div>
@@ -51,20 +52,22 @@
             entry.innerHTML = `
                 <h4>Credit ${count}</h4>
                 <label>Nume Client:</label>
-                <input type="text" id="nume_${count}" placeholder="Introduceți numele"><br>
+                <input type="text" id="nume_${count}" onblur="this.disabled=true; document.getElementById('banca_${count}').focus()" placeholder="Introduceți numele"><br>
                 <label>Banca:</label>
-                <select id="banca_${count}">${Object.keys(praguri).map(b => `<option value="${b}">${b}</option>`).join('')}</select><br>
+                <select id="banca_${count}" onchange="this.disabled=true; document.getElementById('tip_credit_${count}').focus()">
+                    ${Object.keys(praguri).map(b => `<option value="${b}">${b}</option>`).join('')}
+                </select><br>
                 <label>Tip Credit:</label>
-                <select id="tip_credit_${count}">
+                <select id="tip_credit_${count}" onchange="this.disabled=true; document.getElementById('suma_${count}').focus()">
                     <option value="IP">IP</option>
                     <option value="REF IP">REF IP</option>
                     <option value="NP">NP</option>
                     <option value="REF NP">REF NP</option>
                 </select><br>
                 <label>Suma (RON):</label>
-                <input type="number" id="suma_${count}" placeholder="Introduceți suma"><br>
+                <input type="number" id="suma_${count}" onblur="this.disabled=true; document.getElementById('sursa_${count}').focus()" placeholder="Introduceți suma"><br>
                 <label>Sursa Lead:</label>
-                <select id="sursa_${count}">
+                <select id="sursa_${count}" onchange="this.disabled=true">
                     <option value="Recomandari">Recomandari</option>
                     <option value="TeoCredit">TeoCredit</option>
                     <option value="Agent Imobiliar">Agent Imobiliar</option>
