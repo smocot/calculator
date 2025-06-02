@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision Agent - Pe Rând cu Nume</title>
+    <title>Calculator Comision Agent - Corectat</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .credit-entry { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Înregistrări pe rând cu Nume Client</h2>
+    <h2>Calculator Comision Agent - Corectat</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -22,37 +22,19 @@
         let count = 0;
 
         const grilaDetaliata = {
-            'BCR': {
-                'IP': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: 2400000, procent: 1.0 },
-                       { prag: 5000000, procent: 1.2 }, { prag: 50000000, procent: 1.4 }, { prag: Infinity, procent: 1.8 }],
-                'NP': [{ prag: Infinity, procent: 1.2 }],
-                'REF NP': [{ prag: Infinity, procent: 1.0 }]
-            },
-            'GARANTI': {
-                'IP': [{ prag: Infinity, procent: 1.2 }],
-                'NP': [{ prag: Infinity, procent: 1.2 }],
-                'REF IP': [{ prag: Infinity, procent: 0.4 }],
-                'REF NP': [{ prag: Infinity, procent: 1.2 }]
-            },
-            'BT': {
-                'IP': [{ prag: Infinity, procent: 0.8 }],
-                'REF IP': [{ prag: Infinity, procent: 0.8 }]
-            },
-            'FIRST': {
-                'NP': [{ prag: Infinity, procent: 1.0 }]
-            },
-            'UCFIN': {
-                'REF NP': [{ prag: Infinity, procent: 2.0 }]
-            },
-            'ALPHA': {
-                'IP': [{ prag: Infinity, procent: 0.4 }]
-            },
-            'ING': {
-                'IP': [{ prag: Infinity, procent: 0.4 }]
-            },
-            'UNICREDIT': {
-                'IP': [{ prag: Infinity, procent: 1.2 }]
-            }
+            'BCR': { 'IP': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: 2400000, procent: 1.0 }, { prag: 5000000, procent: 1.2 }, { prag: 50000000, procent: 1.4 }, { prag: Infinity, procent: 1.8 }], 'NP': [{ prag: Infinity, procent: 1.2 }], 'REF NP': [{ prag: Infinity, procent: 1.0 }] },
+            'GARANTI': { 'IP': [{ prag: Infinity, procent: 1.2 }], 'NP': [{ prag: Infinity, procent: 1.2 }], 'REF IP': [{ prag: Infinity, procent: 0.4 }], 'REF NP': [{ prag: Infinity, procent: 1.2 }] },
+            'BT': { 'IP': [{ prag: Infinity, procent: 0.8 }], 'REF IP': [{ prag: Infinity, procent: 0.8 }] },
+            'FIRST': { 'NP': [{ prag: Infinity, procent: 1.0 }] },
+            'UCFIN': { 'REF NP': [{ prag: Infinity, procent: 2.0 }] },
+            'ALPHA': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
+            'ING': { 'IP': [{ prag: Infinity, procent: 0.4 }] },
+            'UNICREDIT': { 'IP': [{ prag: Infinity, procent: 1.2 }] },
+            'RAIF': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
+            'BRD': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
+            'LIBRA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
+            'PATRIA': { 'IP': [{ prag: Infinity, procent: 1.0 }] },
+            'CREDIT EUROPE': { 'IP': [{ prag: Infinity, procent: 1.0 }] }
         };
 
         function adaugaCredit() {
@@ -102,9 +84,9 @@
                                 sursa.includes('agent') ? 'CATEGORIA 3' : 'CATEGORIA 1';
 
                 let procent = 0;
-                if (categorie === 'CATEGORIA 2') {
-                    procent = 0.4;
-                } else if (categorie === 'CATEGORIA 1' || categorie === 'CATEGORIA 3') {
+                if (categorie === 'CATEGORIA 2' || categorie === 'CATEGORIA 3') {
+                    procent = 0.4;  // 0.4% fix pentru Categoria 2 și Categoria 3
+                } else {
                     const bancaInfo = grilaDetaliata[banca] || {};
                     const praguri = bancaInfo[tipCredit] || [];
                     for (let p of praguri) {
@@ -115,12 +97,13 @@
                     }
                 }
 
-                if (banca === 'PATRIA BANK' && procent > 0) {
+                if (banca === 'PATRIA' && procent > 0) {
                     const plafon = Math.min(suma * procent / 100, 10000);
                     total += plafon;
                     rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${plafon.toFixed(2)} RON (Plafon)</td></tr>`;
                     continue;
                 }
+
                 if (banca === 'UNICREDIT' && suma < 250000) {
                     procent = 0;
                 }
