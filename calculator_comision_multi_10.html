@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision Agent - Pe Rând</title>
+    <title>Calculator Comision Agent - Pe Rând cu Nume</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .credit-entry { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Înregistrări pe rând</h2>
+    <h2>Calculator Comision Agent - Înregistrări pe rând cu Nume Client</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -62,6 +62,8 @@
             entry.className = 'credit-entry';
             entry.innerHTML = `
                 <h4>Credit ${count}</h4>
+                <label>Nume Client:</label>
+                <input type="text" id="nume_${count}" placeholder="Introduceți numele clientului"><br>
                 <label>Banca:</label>
                 <select id="banca_${count}">
                     ${Object.keys(grilaDetaliata).map(b => `<option value="${b}">${b}</option>`).join('')}
@@ -87,9 +89,10 @@
 
         function calculeazaToate() {
             let total = 0;
-            let rezultatHTML = '<h3>Rezultate</h3><table border="1"><tr><th>Nr</th><th>Banca</th><th>Tip Credit</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
+            let rezultatHTML = '<h3>Rezultate</h3><table border="1"><tr><th>Nr</th><th>Nume Client</th><th>Banca</th><th>Tip Credit</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
             
             for (let i = 1; i <= count; i++) {
+                const nume = document.getElementById(`nume_${i}`).value || "N/A";
                 const banca = document.getElementById(`banca_${i}`).value;
                 const tipCredit = document.getElementById(`tip_credit_${i}`).value;
                 const suma = parseFloat(document.getElementById(`suma_${i}`).value) || 0;
@@ -115,7 +118,7 @@
                 if (banca === 'PATRIA BANK' && procent > 0) {
                     const plafon = Math.min(suma * procent / 100, 10000);
                     total += plafon;
-                    rezultatHTML += `<tr><td>${i}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${plafon.toFixed(2)} RON (Plafon)</td></tr>`;
+                    rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${plafon.toFixed(2)} RON (Plafon)</td></tr>`;
                     continue;
                 }
                 if (banca === 'UNICREDIT' && suma < 250000) {
@@ -124,10 +127,10 @@
 
                 const comision = (suma * procent / 100).toFixed(2);
                 total += parseFloat(comision);
-                rezultatHTML += `<tr><td>${i}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
+                rezultatHTML += `<tr><td>${i}</td><td>${nume}</td><td>${banca}</td><td>${tipCredit}</td><td>${suma}</td><td>${sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
             }
 
-            rezultatHTML += `<tr><td colspan="6"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
+            rezultatHTML += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
             document.getElementById('rezultate').innerHTML = rezultatHTML;
         }
     </script>
