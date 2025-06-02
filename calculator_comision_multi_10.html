@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision </title>
+    <title>Calculator Comision</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 20px; color: #333; }
@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision - Corect pe Categoriile 1, 2, 3</h2>
+    <h2>Calculator Comision - Corect și Complet</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -28,19 +28,19 @@
     <script>
         let count = 0;
         const praguri = {
-            'BCR': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }],
-            'GARANTI': [{ prag: Infinity, procent: 1.2 }],
-            'UNICREDIT': [{ prag: Infinity, procent: 1.2 }],
-            'BT': [{ prag: Infinity, procent: 0.8 }],
-            'PATRIA': [{ prag: Infinity, procent: 1.0 }],
-            'ALPHA': [{ prag: Infinity, procent: 0.4 }],
-            'ING': [{ prag: Infinity, procent: 0.4 }],
-            'RAIF': [{ prag: Infinity, procent: 1.0 }],
-            'BRD': [{ prag: Infinity, procent: 1.0 }],
-            'LIBRA': [{ prag: Infinity, procent: 1.0 }],
-            'FIRST': [{ prag: Infinity, procent: 1.0 }],
-            'CREDIT EUROPE': [{ prag: Infinity, procent: 1.0 }],
-            'UCFIN': [{ prag: Infinity, procent: 2.0 }]
+            'BCR': [{ prag: 800000, procent: 0.8 }],
+            'GARANTI': [{ prag: 800000, procent: 0.8 }],
+            'UNICREDIT': [{ prag: 800000, procent: 0.8 }],
+            'BT': [{ prag: 800000, procent: 0.8 }],
+            'PATRIA': [{ prag: 800000, procent: 0.8 }],
+            'ALPHA': [{ prag: 800000, procent: 0.4 }],
+            'ING': [{ prag: 800000, procent: 0.4 }],
+            'RAIF': [{ prag: 800000, procent: 0.8 }],
+            'BRD': [{ prag: 800000, procent: 0.8 }],
+            'LIBRA': [{ prag: 800000, procent: 0.8 }],
+            'FIRST': [{ prag: 800000, procent: 0.8 }],
+            'CREDIT EUROPE': [{ prag: 800000, procent: 0.8 }],
+            'UCFIN': [{ prag: 800000, procent: 2.0 }]
         };
 
         function adaugaCredit() {
@@ -58,6 +58,8 @@
                 <select id="tip_credit_${count}">
                     <option value="IP">IP</option>
                     <option value="REF IP">REF IP</option>
+                    <option value="NP">NP</option>
+                    <option value="REF NP">REF NP</option>
                 </select><br>
                 <label>Suma (RON):</label>
                 <input type="number" id="suma_${count}" placeholder="Introduceți suma"><br>
@@ -71,7 +73,7 @@
         }
 
         function calculeazaToate() {
-            const totalPeBanca = {};  // Pentru categoriile 1 și 3
+            const totalPeBancaCat = {};
             const data = [];
 
             for (let i = 1; i <= count; i++) {
@@ -80,8 +82,8 @@
                 const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
                 const tip = document.getElementById(`tip_credit_${i}`).value;
                 const categorie = sursa.includes("teocredit") ? 2 : (sursa.includes("agent") ? 3 : 1);
-                if (!totalPeBanca[banca]) totalPeBanca[banca] = {1: 0, 3: 0};
-                if (categorie === 1 || categorie === 3) totalPeBanca[banca][categorie] += suma;
+                if (!totalPeBancaCat[banca]) totalPeBancaCat[banca] = {1: 0, 3: 0};
+                if (categorie === 1 || categorie === 3) totalPeBancaCat[banca][categorie] += suma;
                 data.push({i, banca, suma, sursa, tip, nume: document.getElementById(`nume_${i}`).value || "N/A", categorie});
             }
 
@@ -91,10 +93,8 @@
                 let procent = 0;
                 if (d.categorie === 2) procent = 0.4;
                 else {
-                    const totalBancaCat = totalPeBanca[d.banca][d.categorie];
-                    for (let p of praguri[d.banca]) {
-                        if (totalBancaCat <= p.prag) { procent = p.procent; break; }
-                    }
+                    const totalCat = totalPeBancaCat[d.banca][d.categorie];
+                    procent = totalCat > 800000 ? 0.8 : praguri[d.banca][0].procent;
                 }
                 if (d.banca === 'UNICREDIT' && d.suma < 250000) procent = 0;
                 const comision = (d.suma * procent / 100).toFixed(2);
