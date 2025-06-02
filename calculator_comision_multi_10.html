@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision Agent - Final Corect</h2>
+    <h2>Calculator Comision Agent - Cumulează corect</h2>
     <div id="credits-container"></div>
     <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
@@ -82,12 +82,12 @@
                 const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
                 const tip = document.getElementById(`tip_credit_${i}`).value;
                 if (!totalPeBanca[banca]) totalPeBanca[banca] = 0;
-                if (sursa !== "teocredit") totalPeBanca[banca] += suma;
+                totalPeBanca[banca] += suma;
                 date.push({ i, banca, suma, sursa, tip, nume: document.getElementById(`nume_${i}`).value || "N/A" });
             }
 
             let total = 0, rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
-            date.forEach(d => {
+            for (const d of date) {
                 let procent = 0;
                 if (d.sursa.includes("teocredit")) procent = 0.4;
                 else {
@@ -99,7 +99,7 @@
                 const comision = (d.suma * procent / 100).toFixed(2);
                 total += parseFloat(comision);
                 rezultatHTML += `<tr><td>${d.i}</td><td>${d.nume}</td><td>${d.banca}</td><td>${d.tip}</td><td>${d.suma}</td><td>${d.sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
-            });
+            }
             rezultatHTML += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
             document.getElementById('rezultate').innerHTML = rezultatHTML;
         }
