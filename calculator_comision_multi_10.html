@@ -2,13 +2,12 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <title>Calculator Comision - Blocare câmpuri și 2 înregistrări pe rând</title>
+    <title>Calculator Comision - Corect pe Total</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 20px; color: #333; }
         h2 { text-align: center; color: #4CAF50; }
-        .row { display: flex; flex-wrap: wrap; }
-        .credit-entry { flex: 0 0 48%; margin: 1%; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; }
+        .credit-entry { background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; margin-bottom: 15px; width: 300px; }
         input, select { width: 100%; margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
         button { background-color: #4CAF50; color: white; padding: 10px 20px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
         button:hover { background-color: #45a049; }
@@ -20,14 +19,34 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision - Blocare și 2 Înregistrări pe Rând</h2>
-    <div class="row" id="credits-container"></div>
-    <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
+    <h2>Calculator Comision - Total și Praguri</h2>
+    <div id="form-container" class="credit-entry">
+        <label>Nume Client:</label>
+        <input type="text" id="nume" placeholder="Introduceți numele">
+        <label>Banca:</label>
+        <select id="banca">
+            <option value="BCR">BCR</option><option value="GARANTI">GARANTI</option><option value="UNICREDIT">UNICREDIT</option>
+            <option value="BT">BT</option><option value="PATRIA">PATRIA</option><option value="ALPHA">ALPHA</option>
+            <option value="ING">ING</option><option value="RAIF">RAIF</option><option value="BRD">BRD</option>
+            <option value="LIBRA">LIBRA</option><option value="FIRST">FIRST</option><option value="CREDIT EUROPE">CREDIT EUROPE</option>
+            <option value="UCFIN">UCFIN</option>
+        </select>
+        <label>Tip Credit:</label>
+        <select id="tip_credit">
+            <option value="IP">IP</option><option value="REF IP">REF IP</option><option value="NP">NP</option><option value="REF NP">REF NP</option>
+        </select>
+        <label>Suma (RON):</label>
+        <input type="number" id="suma" placeholder="Introduceți suma">
+        <label>Sursa Lead:</label>
+        <select id="sursa">
+            <option value="Recomandari">Recomandari</option><option value="TeoCredit">TeoCredit</option><option value="Agent Imobiliar">Agent Imobiliar</option>
+        </select>
+        <button onclick="adaugaCredit()">Adaugă Înregistrare</button>
+    </div>
     <button onclick="calculeazaToate()">Calculează Comisioane</button>
     <div class="result" id="rezultate"></div>
 
     <script>
-        let count = 0;
         const praguri = {
             'BCR': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }],
             'GARANTI': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.2 }],
@@ -44,76 +63,45 @@
             'UCFIN': [{ prag: 800000, procent: 2.0 }]
         };
 
+        let inregistrari = [];
+
         function adaugaCredit() {
-            count++;
-            const container = document.getElementById('credits-container');
-            const entry = document.createElement('div');
-            entry.className = 'credit-entry';
-            entry.innerHTML = `
-                <h4>Credit ${count}</h4>
-                <label>Nume Client:</label>
-                <input type="text" id="nume_${count}" onblur="this.disabled=true; document.getElementById('banca_${count}').focus()" placeholder="Introduceți numele"><br>
-                <label>Banca:</label>
-                <select id="banca_${count}" onchange="this.disabled=true; document.getElementById('tip_credit_${count}').focus()">
-                    ${Object.keys(praguri).map(b => `<option value="${b}">${b}</option>`).join('')}
-                </select><br>
-                <label>Tip Credit:</label>
-                <select id="tip_credit_${count}" onchange="this.disabled=true; document.getElementById('suma_${count}').focus()">
-                    <option value="IP">IP</option>
-                    <option value="REF IP">REF IP</option>
-                    <option value="NP">NP</option>
-                    <option value="REF NP">REF NP</option>
-                </select><br>
-                <label>Suma (RON):</label>
-                <input type="number" id="suma_${count}" onblur="this.disabled=true; document.getElementById('sursa_${count}').focus()" placeholder="Introduceți suma"><br>
-                <label>Sursa Lead:</label>
-                <select id="sursa_${count}" onchange="this.disabled=true">
-                    <option value="Recomandari">Recomandari</option>
-                    <option value="TeoCredit">TeoCredit</option>
-                    <option value="Agent Imobiliar">Agent Imobiliar</option>
-                </select><br>`;
-            container.appendChild(entry);
+            const nume = document.getElementById('nume').value || "N/A";
+            const banca = document.getElementById('banca').value;
+            const tip = document.getElementById('tip_credit').value;
+            const suma = parseFloat(document.getElementById('suma').value) || 0;
+            const sursa = document.getElementById('sursa').value;
+            const categorie = sursa.toLowerCase().includes("teocredit") ? 2 : (sursa.toLowerCase().includes("agent") ? 3 : 1);
+            inregistrari.push({nume,banca,tip,suma,sursa,categorie});
+            document.getElementById('nume').value = ""; document.getElementById('suma').value = "";
         }
 
         function calculeazaToate() {
-            const data = [];
-            const totalPeBancaCategorie = {};
+            const totalPeBanca = {};
+            inregistrari.forEach(r => {
+                if (!totalPeBanca[r.banca]) totalPeBanca[r.banca] = {1:0,2:0,3:0};
+                totalPeBanca[r.banca][r.categorie] += r.suma;
+            });
 
-            for (let i = 1; i <= count; i++) {
-                const banca = document.getElementById(`banca_${i}`).value;
-                const suma = parseFloat(document.getElementById(`suma_${i}`).value) || 0;
-                const sursa = document.getElementById(`sursa_${i}`).value.toLowerCase();
-                const tip = document.getElementById(`tip_credit_${i}`).value;
-                const categorie = sursa.includes("teocredit") ? 2 : (sursa.includes("agent") ? 3 : 1);
-                if (!totalPeBancaCategorie[banca]) totalPeBancaCategorie[banca] = {1:0, 2:0, 3:0};
-                totalPeBancaCategorie[banca][categorie] += suma;
-                data.push({i, banca, suma, sursa, tip, nume: document.getElementById(`nume_${i}`).value || "N/A", categorie});
-            }
-
-            const procentMaxPeBancaCategorie = {};
-            for (const banca in totalPeBancaCategorie) {
-                procentMaxPeBancaCategorie[banca] = {};
-                for (const categorie of [1,3]) {
-                    const total = totalPeBancaCategorie[banca][categorie];
+            const procenteMax = {};
+            for (const banca in totalPeBanca) {
+                procenteMax[banca] = {};
+                [1,3].forEach(cat => {
                     let procent = 0;
-                    for (let p of praguri[banca]) {
-                        if (total >= p.prag) procent = p.procent;
-                    }
-                    procentMaxPeBancaCategorie[banca][categorie] = procent;
-                }
+                    praguri[banca].forEach(p => { if (totalPeBanca[banca][cat] >= p.prag) procent = p.procent; });
+                    procenteMax[banca][cat] = procent;
+                });
             }
 
-            let total = 0;
-            let rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
-            for (const d of data) {
-                let procent = d.categorie === 2 ? 0.4 : procentMaxPeBancaCategorie[d.banca][d.categorie] || praguri[d.banca][0].procent;
-                if (d.banca === 'UNICREDIT' && d.suma < 250000) procent = 0;
-                const comision = (d.suma * procent / 100).toFixed(2);
-                total += parseFloat(comision);
-                rezultatHTML += `<tr><td>${d.i}</td><td>${d.nume}</td><td>${d.banca}</td><td>${d.tip}</td><td>${d.suma}</td><td>${d.sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
-            }
-            rezultatHTML += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
-            document.getElementById('rezultate').innerHTML = rezultatHTML;
+            let total = 0, html = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
+            inregistrari.forEach((r,i) => {
+                let procent = r.categorie===2 ? 0.4 : procenteMax[r.banca][r.categorie] || praguri[r.banca][0].procent;
+                if (r.banca==='UNICREDIT' && r.suma<250000) procent=0;
+                let comision = (r.suma*procent/100).toFixed(2); total+=parseFloat(comision);
+                html+=`<tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${procent}%</td><td>${comision} RON</td></tr>`;
+            });
+            html+=`<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td></tr></table>`;
+            document.getElementById('rezultate').innerHTML = html;
         }
     </script>
 </body>
