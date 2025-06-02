@@ -28,13 +28,13 @@
     <script>
         let count = 0;
         const praguri = {
-            'BCR': [{ prag: 800000, procent: 0.8 }],
-            'GARANTI': [{ prag: 800000, procent: 0.8 }],
-            'UNICREDIT': [{ prag: 800000, procent: 0.8 }],
+            'BCR': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.0 }],
+            'GARANTI': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.2 }],
+            'UNICREDIT': [{ prag: 800000, procent: 0.8 }, { prag: 1600000, procent: 0.9 }, { prag: Infinity, procent: 1.2 }],
             'BT': [{ prag: 800000, procent: 0.8 }],
-            'PATRIA': [{ prag: 800000, procent: 0.8 }],
-            'ALPHA': [{ prag: 800000, procent: 0.4 }],
-            'ING': [{ prag: 800000, procent: 0.4 }],
+            'PATRIA': [{ prag: 800000, procent: 1.0 }],
+            'ALPHA': [{ prag: Infinity, procent: 0.4 }],
+            'ING': [{ prag: Infinity, procent: 0.4 }],
             'RAIF': [{ prag: 800000, procent: 0.8 }],
             'BRD': [{ prag: 800000, procent: 0.8 }],
             'LIBRA': [{ prag: 800000, procent: 0.8 }],
@@ -91,10 +91,13 @@
             let rezultatHTML = '<h3>Rezultate</h3><table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th></tr>';
             for (const d of data) {
                 let procent = 0;
-                if (d.categorie === 2) procent = 0.4;
-                else {
+                if (d.categorie === 2) {
+                    procent = 0.4;
+                } else {
                     const totalCat = totalPeBancaCat[d.banca][d.categorie];
-                    procent = totalCat > 800000 ? 0.8 : praguri[d.banca][0].procent;
+                    for (let p of praguri[d.banca]) {
+                        if (totalCat <= p.prag) { procent = p.procent; break; }
+                    }
                 }
                 if (d.banca === 'UNICREDIT' && d.suma < 250000) procent = 0;
                 const comision = (d.suma * procent / 100).toFixed(2);
