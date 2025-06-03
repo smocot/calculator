@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h2>Calculator Comision-test</h2>
+    <h2>Calculator Comision test 2</h2>
     <div id="form-container" class="credit-entry">
         <label>Nume Client:</label>
         <input type="text" id="nume" placeholder="Introduceți numele">
@@ -89,20 +89,19 @@
         function calculeazaToate() {
             const totalPeBanca = {};
             inregistrari.forEach(r => {
-                if (!totalPeBanca[r.banca]) totalPeBanca[r.banca] = {total:0,categorie:{}};
-                totalPeBanca[r.banca].total += r.suma;
-                if (!totalPeBanca[r.banca].categorie[r.categorie]) totalPeBanca[r.banca].categorie[r.categorie]=0;
-                totalPeBanca[r.banca].categorie[r.categorie] += r.suma;
+                if (!totalPeBanca[r.banca]) totalPeBanca[r.banca] = {totalCat1_3:0, totalCat2:0};
+                if (r.categorie === 2) totalPeBanca[r.banca].totalCat2 += r.suma;
+                else totalPeBanca[r.banca].totalCat1_3 += r.suma;
             });
 
             let totaluriHTML = '<h3>Totaluri Cumulative și Praguri</h3><table><tr><th>Banca</th><th>Total Cat 1&3</th><th>Total Cat 2</th><th>Procent Cat 1&3</th></tr>';
             const procenteMax = {};
             for (const banca in totalPeBanca) {
-                const totalCat1_3 = totalPeBanca[banca].categorie[1]||0 + totalPeBanca[banca].categorie[3]||0;
+                const totalCat1_3 = totalPeBanca[banca].totalCat1_3;
                 let procent = 0;
                 praguri[banca].forEach(p => { if (totalCat1_3 >= p.prag) procent = p.procent; });
                 procenteMax[banca] = procent;
-                totaluriHTML+=`<tr><td>${banca}</td><td>${totalCat1_3}</td><td>${totalPeBanca[banca].categorie[2]||0}</td><td>${procent}%</td></tr>`;
+                totaluriHTML+=`<tr><td>${banca}</td><td>${totalCat1_3}</td><td>${totalPeBanca[banca].totalCat2}</td><td>${procent}%</td></tr>`;
             }
             totaluriHTML+='</table>';
             document.getElementById('totaluriCumulative').innerHTML = totaluriHTML;
