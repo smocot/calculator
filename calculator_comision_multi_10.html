@@ -1,159 +1,184 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculator Comision ver 28</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Calculator Comision v29</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Roboto', sans-serif;
-      padding: 1rem;
-      background: #f5f5f5;
-      color: #333;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
     }
     h1 {
-      color: green;
+      color: #2e7d32;
+      margin-bottom: 1rem;
+    }
+    input, select, button {
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+      margin-bottom: 1rem;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
-      background: white;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      margin-bottom: 2rem;
     }
     th, td {
+      padding: 0.75rem;
       border: 1px solid #ddd;
-      padding: 0.5rem;
-      text-align: center;
+      text-align: left;
     }
     th {
-      background: #f0f0f0;
+      background-color: #4caf50;
+      color: white;
     }
-    .highlight {
-      font-weight: bold;
-      color: #000;
-    }
-    .delete-btn {
-      background: #e74c3c;
+    .delete {
+      background-color: #e53935;
       color: white;
       border: none;
-      padding: 0.3rem 0.6rem;
+      padding: 0.5rem;
       cursor: pointer;
-      border-radius: 4px;
     }
-    .input-row {
-      margin-bottom: 1rem;
-    }
-    input, select, button {
-      padding: 0.4rem;
-      margin-right: 0.5rem;
-      border-radius: 4px;
-    }
-    .footer {
+    .summary {
+      font-weight: bold;
       margin-top: 1rem;
-      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
-  <h1>Calculator Comision - ver. 28</h1>
+<h1>Calculator Comision - ver. 29</h1>
 
-  <div class="input-row">
-    <input type="text" id="client" placeholder="Nume client">
-    <select id="banca">
-      <option value="BCR">BCR</option>
-    </select>
-    <select id="tipCredit">
-      <option value="IP">IP</option>
-    </select>
-    <input type="number" id="suma" placeholder="Suma" />
-    <select id="sursa">
-      <option value="recomandari">Recomandari</option>
-      <option value="teocredit">TeoCredit</option>
-      <option value="agent imobiliar">Agent Imobiliar</option>
-    </select>
-    <button onclick="adaugaRand()">Adaugă</button>
-    <button onclick="calculeaza()">Calculează</button>
-  </div>
+<input type="text" id="numeClient" placeholder="Nume client">
+<select id="banca">
+  <option>BCR</option>
+  <option>BRD</option>
+  <option>ING</option>
+  <option>UNICREDIT</option>
+  <option>GARANTI</option>
+  <option>FIRST BANK</option>
+  <option>ALPHA</option>
+  <option>RAIFFEISEN</option>
+</select>
+<select id="tipCredit">
+  <option>IP</option>
+  <option>REF IP</option>
+</select>
+<input type="number" id="suma" placeholder="Suma">
+<select id="sursa">
+  <option>Recomandari</option>
+  <option>TeoCredit</option>
+  <option>Agent Imobiliar</option>
+</select>
+<button onclick="adaugaInregistrare()">Adaugă</button>
+<button onclick="calculeazaComisioane()">Calculează</button>
 
-  <table id="tabel">
-    <thead>
-      <tr>
-        <th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th><th>Acțiune</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr><td colspan="7">Total</td><td colspan="2" id="totalComision" class="highlight"></td></tr>
-    </tfoot>
-  </table>
+<table id="tabel">
+  <thead>
+  <tr>
+    <th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th><th>Acțiune</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+  <tfoot>
+  <tr><td colspan="7">Total</td><td id="totalComision"></td><td></td></tr>
+  </tfoot>
+</table>
 
-  <div class="footer" id="praguriInfo"></div>
+<p id="rezumat" class="summary"></p>
 
-  <script>
-    const date = [];
-    const praguriBCR = [
-      { min: 0, max: 800000, procent: 0.008 },
-      { min: 800001, max: 1600000, procent: 0.009 },
-      { min: 1600001, max: 2400000, procent: 0.01 },
-      { min: 2400001, max: Infinity, procent: 0.012 },
-    ];
+<script>
+  const praguri = {
+    "BCR": [
+      { min: 0, max: 800000, percent: 0.008 },
+      { min: 800001, max: 1600000, percent: 0.009 },
+      { min: 1600001, max: 2400000, percent: 0.010 },
+      { min: 2400001, max: Infinity, percent: 0.012 }
+    ],
+    "BRD": [
+      { min: 0, max: Infinity, percent: 0.008 }
+    ],
+    "ING": [
+      { min: 0, max: 1600000, percent: 0.008 },
+      { min: 1600001, max: Infinity, percent: 0.009 }
+    ],
+    "UNICREDIT": [
+      { min: 0, max: 800000, percent: 0.008 },
+      { min: 800001, max: Infinity, percent: 0.009 }
+    ],
+    "GARANTI": [
+      { min: 0, max: Infinity, percent: 0.008 }
+    ],
+    "FIRST BANK": [
+      { min: 0, max: Infinity, percent: 0.008 }
+    ],
+    "ALPHA": [
+      { min: 0, max: 800000, percent: 0.008 },
+      { min: 800001, max: 1600000, percent: 0.009 },
+      { min: 1600001, max: Infinity, percent: 0.010 }
+    ],
+    "RAIFFEISEN": [
+      { min: 0, max: 800000, percent: 0.008 },
+      { min: 800001, max: Infinity, percent: 0.009 }
+    ]
+  };
 
-    function adaugaRand() {
-      const nume = document.getElementById('client').value || 'N/A';
-      const banca = document.getElementById('banca').value;
-      const tip = document.getElementById('tipCredit').value;
-      const suma = parseFloat(document.getElementById('suma').value);
-      const sursa = document.getElementById('sursa').value;
-      if (isNaN(suma) || suma <= 0) return;
-      date.push({ nume, banca, tip, suma, sursa });
-      document.getElementById('suma').value = '';
-      afiseaza();
-    }
+  const inregistrari = [];
 
-    function sterge(index) {
-      date.splice(index, 1);
-      afiseaza();
-    }
+  function adaugaInregistrare() {
+    const nume = document.getElementById("numeClient").value || "N/A";
+    const banca = document.getElementById("banca").value;
+    const tip = document.getElementById("tipCredit").value;
+    const suma = parseFloat(document.getElementById("suma").value);
+    const sursa = document.getElementById("sursa").value;
+    if (!suma || suma <= 0) return alert("Introduceți o sumă validă.");
+    inregistrari.push({ nume, banca, tip, suma, sursa });
+    document.getElementById("suma").value = "";
+    afiseazaInregistrari();
+  }
 
-    function calculeaza() {
-      const totalCat13 = date.filter(x => x.sursa !== 'teocredit').reduce((a, b) => a + b.suma, 0);
-      const prag = praguriBCR.find(p => totalCat13 >= p.min && totalCat13 <= p.max)?.procent || 0;
+  function afiseazaInregistrari() {
+    const tbody = document.querySelector("#tabel tbody");
+    tbody.innerHTML = "";
+    inregistrari.forEach((r, i) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma.toLocaleString()}</td>
+        <td>${r.sursa}</td><td>${r.procent ? (r.procent * 100).toFixed(2) + "%" : ""}</td><td>${r.comision ? r.comision.toFixed(2).toLocaleString() + " RON" : ""}</td>
+        <td><button class='delete' onclick='sterge(${i})'>Șterge</button></td>`;
+      tbody.appendChild(row);
+    });
+  }
 
-      let totalComision = 0;
-      const tbody = document.querySelector('#tabel tbody');
-      tbody.innerHTML = '';
-      date.forEach((entry, i) => {
-        let procent = 0;
-        if (entry.sursa === 'teocredit') procent = 0.004;
-        else if (entry.sursa === 'agent imobiliar') procent = prag / 2;
-        else procent = prag;
-        const comision = entry.suma * procent;
-        totalComision += comision;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${i+1}</td><td>${entry.nume}</td><td>${entry.banca}</td><td>${entry.tip}</td><td>${entry.suma.toLocaleString()}</td><td>${capitalize(entry.sursa)}</td><td>${(procent*100).toFixed(2)}%</td><td>${comision.toLocaleString(undefined, {minimumFractionDigits:2})} RON</td><td><button class='delete-btn' onclick='sterge(${i})'>Șterge</button></td>`;
-        tbody.appendChild(tr);
+  function calculeazaComisioane() {
+    const banci = [...new Set(inregistrari.map(r => r.banca))];
+    let totalComision = 0;
+    let rezumat = "";
+    banci.forEach(banca => {
+      const sumaCateg13 = inregistrari.filter(r => r.banca === banca && r.sursa !== "TeoCredit").reduce((a, b) => a + b.suma, 0);
+      const prag = praguri[banca].find(p => sumaCateg13 >= p.min && sumaCateg13 <= p.max) || { percent: 0 };
+      inregistrari.forEach(r => {
+        if (r.banca === banca) {
+          if (r.sursa === "TeoCredit") r.procent = 0.004;
+          else if (r.sursa === "Agent Imobiliar") r.procent = prag.percent / 2;
+          else r.procent = prag.percent;
+          r.comision = r.suma * r.procent;
+          totalComision += r.comision;
+        }
       });
-      document.getElementById('totalComision').innerText = totalComision.toLocaleString(undefined, {minimumFractionDigits:2}) + ' RON';
-      document.getElementById('praguriInfo').innerHTML = `<strong>BCR:</strong> Total introdus (Cat. 1 + 3) = ${totalCat13.toLocaleString()} RON → Prag aplicat = ${(prag*100).toFixed(2)}%`;
-    }
+      rezumat += `<p><strong>${banca}</strong>: Total introdus (Cat. 1 + 3) = ${sumaCateg13.toLocaleString()} RON → Prag aplicat = ${(prag.percent * 100).toFixed(2)}%</p>`;
+    });
+    document.getElementById("totalComision").innerText = totalComision.toFixed(2).toLocaleString() + " RON";
+    document.getElementById("rezumat").innerHTML = rezumat;
+    afiseazaInregistrari();
+  }
 
-    function afiseaza() {
-      const tbody = document.querySelector('#tabel tbody');
-      tbody.innerHTML = '';
-      date.forEach((entry, i) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${i+1}</td><td>${entry.nume}</td><td>${entry.banca}</td><td>${entry.tip}</td><td>${entry.suma.toLocaleString()}</td><td>${capitalize(entry.sursa)}</td><td>–</td><td>–</td><td><button class='delete-btn' onclick='sterge(${i})'>Șterge</button></td>`;
-        tbody.appendChild(tr);
-      });
-      document.getElementById('totalComision').innerText = '';
-      document.getElementById('praguriInfo').innerText = '';
-    }
-
-    function capitalize(word) {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    }
-  </script>
+  function sterge(index) {
+    inregistrari.splice(index, 1);
+    afiseazaInregistrari();
+  }
+</script>
 </body>
 </html>
