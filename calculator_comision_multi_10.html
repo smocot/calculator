@@ -97,7 +97,7 @@
         }
         const comision = (r.suma * procent / 100);
         total += comision;
-        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${(procent * 1).toFixed(2)}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
+        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${procent.toFixed(2)}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
       });
 
       html += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td><td></td></tr></table>`;
@@ -107,7 +107,7 @@
       for (let banca in totaluri) {
         const total = totaluri[banca].totalGeneral;
         const prag = praguri[banca].filter(p => total >= p.prag).pop();
-        explicatii += `<p><strong>${banca}</strong>: Total introdus = ${total.toLocaleString()} RON → Prag aplicat = ${prag.procent}%</p>`;
+        explicatii += `<p><strong>${banca}</strong>: Total introdus = ${total.toLocaleString()} RON → Prag aplicat = ${prag.procent.toFixed(2)}%</p>`;
       }
       document.getElementById("explicatii").innerHTML = explicatii;
     }
