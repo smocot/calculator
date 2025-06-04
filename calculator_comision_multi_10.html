@@ -2,184 +2,129 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <title>Calculator Comision - Praguri și Vizualizare</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <title>Calculator Comision Agent</title>
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f4f6f8;
-      margin: 0;
-      padding: 2rem;
-    }
-    h1 {
-      color: #2e7d32;
-      margin-bottom: 1rem;
-    }
-    input, select, button {
-      padding: 0.5rem;
-      margin-right: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      margin-bottom: 2rem;
-    }
-    th, td {
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #4caf50;
-      color: white;
-    }
-    .delete {
-      background-color: #e53935;
-      color: white;
-      border: none;
-      padding: 0.5rem;
-      cursor: pointer;
-    }
-    .summary {
-      font-weight: bold;
-      margin-top: 1rem;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f6f8fa; }
+    h1 { color: #2e7d32; }
+    input, select, button { margin: 5px; padding: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; }
+    th { background-color: #4caf50; color: white; }
+    .delete { background-color: red; color: white; border: none; cursor: pointer; padding: 6px; }
   </style>
 </head>
 <body>
 <h1>Calculator Comision - ver. 29</h1>
 
-<input type="text" id="numeClient" placeholder="Nume client">
+<input id="numeClient" placeholder="Nume client">
 <select id="banca">
-  <option>BCR</option>
-  <option>BRD</option>
-  <option>ING</option>
-  <option>UNICREDIT</option>
-  <option>GARANTI</option>
-  <option>FIRST BANK</option>
-  <option>ALPHA</option>
-  <option>RAIFFEISEN</option>
+  <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
+  <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option><option>RAIFFEISEN</option>
 </select>
 <select id="tipCredit">
-  <option>IP</option>
-  <option>REF IP</option>
-  <option>CONSTRUCTIE</option>
-  <option>REFINANTARE IPOTECAR</option>
-  <option>NEVOI PERSONALE</option>
-  <option>REFINANTARE NEVOI PERSONALE</option>
+  <option>IP</option><option>REF IP</option><option>NEVOI</option><option>REF NEVOI</option><option>CONSTRUCTIE</option>
 </select>
-<input type="number" id="suma" placeholder="Suma">
+<input id="suma" placeholder="Suma">
 <select id="sursa">
-  <option>Recomandari</option>
-  <option>TeoCredit</option>
-  <option>Agent Imobiliar</option>
+  <option>Recomandari</option><option>TeoCredit</option><option>Agent Imobiliar</option>
 </select>
 <button onclick="adaugaInregistrare()">Adaugă credit</button>
 <button onclick="calculeazaComisioane()">Calculează</button>
 
 <table id="tabel">
   <thead>
-  <tr>
-    <th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th><th>Acțiune</th>
-  </tr>
+    <tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th><th>Acțiune</th></tr>
   </thead>
   <tbody></tbody>
-  <tfoot>
-  <tr><td colspan="7">Total</td><td id="totalComision"></td><td></td></tr>
-  </tfoot>
 </table>
-
-<p id="rezumat" class="summary"></p>
+<p id="rezumat"></p>
 
 <script>
-  const praguri = {
-    "BCR": [
-      { min: 0, max: 800000, percent: 0.008 },
-      { min: 800001, max: 1600000, percent: 0.009 },
-      { min: 1600001, max: 2400000, percent: 0.010 },
-      { min: 2400001, max: 5000000, percent: 0.012 },
-      { min: 5000001, max: 50000000, percent: 0.014 }
-    ],
-    "BRD": [ { min: 0, max: Infinity, percent: 0.008 } ],
-    "ING": [
-      { min: 0, max: 1600000, percent: 0.008 },
-      { min: 1600001, max: Infinity, percent: 0.009 }
-    ],
-    "UNICREDIT": [
-      { min: 0, max: 800000, percent: 0.008 },
-      { min: 800001, max: Infinity, percent: 0.009 }
-    ],
-    "GARANTI": [ { min: 0, max: Infinity, percent: 0.008 } ],
-    "FIRST BANK": [ { min: 0, max: Infinity, percent: 0.008 } ],
-    "ALPHA": [
-      { min: 0, max: 800000, percent: 0.008 },
-      { min: 800001, max: 1600000, percent: 0.009 },
-      { min: 1600001, max: Infinity, percent: 0.010 }
-    ],
-    "RAIFFEISEN": [
-      { min: 0, max: 800000, percent: 0.008 },
-      { min: 800001, max: Infinity, percent: 0.009 }
-    ]
-  };
+const praguri = {
+  BCR: [
+    { min: 0, max: 800000, percent: 0.008 },
+    { min: 800001, max: 1600000, percent: 0.009 },
+    { min: 1600001, max: 2400000, percent: 0.010 },
+    { min: 2400001, max: 5000000, percent: 0.012 },
+    { min: 5000001, max: 50000000, percent: 0.014 }
+  ],
+  BRD: [{ min: 0, max: Infinity, percent: 0.008 }],
+  ING: [
+    { min: 0, max: 1600000, percent: 0.008 },
+    { min: 1600001, max: Infinity, percent: 0.009 }
+  ],
+  UNICREDIT: [
+    { min: 0, max: 800000, percent: 0.008 },
+    { min: 800001, max: Infinity, percent: 0.009 }
+  ],
+  GARANTI: [{ min: 0, max: Infinity, percent: 0.008 }],
+  "FIRST BANK": [{ min: 0, max: Infinity, percent: 0.008 }],
+  ALPHA: [
+    { min: 0, max: 800000, percent: 0.008 },
+    { min: 800001, max: 1600000, percent: 0.009 },
+    { min: 1600001, max: Infinity, percent: 0.010 }
+  ],
+  RAIFFEISEN: [
+    { min: 0, max: 800000, percent: 0.008 },
+    { min: 800001, max: Infinity, percent: 0.009 }
+  ]
+};
 
-  const inregistrari = [];
+let inregistrari = [];
 
-  function adaugaInregistrare() {
-    const nume = document.getElementById("numeClient").value || "N/A";
-    const banca = document.getElementById("banca").value;
-    const tip = document.getElementById("tipCredit").value;
-    const suma = parseFloat(document.getElementById("suma").value);
-    const sursa = document.getElementById("sursa").value;
-    if (!suma || suma <= 0) return alert("Introduceți o sumă validă.");
-    inregistrari.push({ nume, banca, tip, suma, sursa });
-    document.getElementById("suma").value = "";
-    afiseazaInregistrari();
-  }
+function adaugaInregistrare() {
+  const nume = document.getElementById("numeClient").value || "N/A";
+  const banca = document.getElementById("banca").value;
+  const tip = document.getElementById("tipCredit").value;
+  const suma = parseFloat(document.getElementById("suma").value);
+  const sursa = document.getElementById("sursa").value;
+  if (!suma || suma <= 0) return alert("Suma invalidă");
+  inregistrari.push({ nume, banca, tip, suma, sursa });
+  document.getElementById("suma").value = "";
+  afiseazaInregistrari();
+}
 
-  function afiseazaInregistrari() {
-    const tbody = document.querySelector("#tabel tbody");
-    tbody.innerHTML = "";
-    inregistrari.forEach((r, i) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma.toLocaleString()}</td>
-        <td>${r.sursa}</td><td>${r.procent ? (r.procent * 100).toFixed(2) + "%" : ""}</td><td>${r.comision ? r.comision.toFixed(2).toLocaleString() + " RON" : ""}</td>
-        <td><button class='delete' onclick='sterge(${i})'>Șterge</button></td>`;
-      tbody.appendChild(row);
+function afiseazaInregistrari() {
+  const tbody = document.querySelector("#tabel tbody");
+  tbody.innerHTML = "";
+  inregistrari.forEach((r, i) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma.toLocaleString()}</td>
+    <td>${r.sursa}</td><td>${(r.procent * 100).toFixed(2)}%</td><td>${r.comision.toFixed(2).toLocaleString()} RON</td>
+    <td><button class='delete' onclick='sterge(${i})'>Șterge</button></td>`;
+    tbody.appendChild(row);
+  });
+}
+
+function sterge(i) {
+  inregistrari.splice(i, 1);
+  afiseazaInregistrari();
+}
+
+function calculeazaComisioane() {
+  let total = 0;
+  const rez = {};
+  inregistrari.forEach(r => {
+    if (!rez[r.banca]) rez[r.banca] = [];
+    rez[r.banca].push(r);
+  });
+  let rezumat = "";
+  Object.entries(rez).forEach(([banca, entries]) => {
+    const sumaCat13 = entries.filter(e => e.sursa !== "TeoCredit").reduce((a, b) => a + b.suma, 0);
+    const prag = (praguri[banca] || [{ percent: 0 }]).find(p => sumaCat13 >= p.min && sumaCat13 <= p.max) || { percent: 0 };
+
+    entries.forEach(r => {
+      if (r.sursa === "TeoCredit") r.procent = 0.004;
+      else if (r.sursa === "Agent Imobiliar") r.procent = prag.percent * 0.6667; // prag/1.5
+      else r.procent = prag.percent;
+      r.comision = r.suma * r.procent;
+      total += r.comision;
     });
-  }
-
-  function calculeazaComisioane() {
-    const banci = [...new Set(inregistrari.map(r => r.banca))];
-    let totalComision = 0;
-    let rezumat = "";
-    banci.forEach(banca => {
-      const sumaCateg13 = inregistrari.filter(r => r.banca === banca && r.sursa !== "TeoCredit").reduce((a, b) => a + b.suma, 0);
-      const prag = praguri[banca].find(p => sumaCateg13 >= p.min && sumaCateg13 <= p.max) || { percent: 0 };
-      inregistrari.forEach(r => {
-        if (r.banca === banca) {
-          if (["NEVOI PERSONALE", "REFINANTARE NEVOI PERSONALE"].includes(r.tip)) {
-            r.procent = banca === "UNICREDIT" || banca === "FIRST BANK" ? 0.02 : banca === "PATRIA" || banca === "GARANTI" ? 0.012 : banca === "ING" ? 0.004 : 0;
-          } else if (r.sursa === "TeoCredit") r.procent = 0.004;
-          else if (r.sursa === "Agent Imobiliar") r.procent = prag.percent / 2;
-          else r.procent = prag.percent;
-          r.comision = r.suma * r.procent;
-          totalComision += r.comision;
-        }
-      });
-      rezumat += `<p><strong>${banca}</strong>: Total introdus (Cat. 1 + 3) = ${sumaCateg13.toLocaleString()} RON → Prag aplicat = ${(prag.percent * 100).toFixed(2)}%</p>`;
-    });
-    document.getElementById("totalComision").innerText = totalComision.toFixed(2).toLocaleString() + " RON";
-    document.getElementById("rezumat").innerHTML = rezumat;
-    afiseazaInregistrari();
-  }
-
-  function sterge(index) {
-    inregistrari.splice(index, 1);
-    afiseazaInregistrari();
-  }
+    rezumat += `<strong>${banca}</strong>: Total introdus (Cat. 1 + 3) = ${sumaCat13.toLocaleString()} RON → Prag aplicat = ${(prag.percent*100).toFixed(2)}%<br>`;
+  });
+  document.getElementById("rezumat").innerHTML = rezumat;
+  afiseazaInregistrari();
+}
 </script>
 </body>
 </html>
