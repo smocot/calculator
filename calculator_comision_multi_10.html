@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8" />
-  <title>Calculator Comision ver.26</title>
+  <title>Calculator Comision vers 27</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
     h2 { color: #4CAF50; }
@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-  <h2>Calculator Comision ver 26</h2>
+  <h2>Calculator Comision vers 27</h2>
 
   <div class="section">
     <input type="text" id="nume" placeholder="Nume client" />
@@ -44,7 +44,8 @@
       BCR: [
         { prag: 0, procent: 0.8 },
         { prag: 800000, procent: 0.9 },
-        { prag: 1600000, procent: 1.0 }
+        { prag: 1600000, procent: 1.0 },
+        { prag: 2400000, procent: 1.2 }
       ]
     };
 
@@ -68,19 +69,22 @@
 
     function calculeazaToate() {
       const totaluri = {};
+      const pragAplicat = {};
+
       inregistrari.forEach(r => {
         if (!totaluri[r.banca]) {
-          totaluri[r.banca] = { totalGeneral: 0, totalCat2: 0 };
+          totaluri[r.banca] = { totalGeneral: 0, totalCat13: 0 };
         }
         totaluri[r.banca].totalGeneral += r.suma;
-        if (r.categorie === 2) totaluri[r.banca].totalCat2 += r.suma;
+        if (r.categorie === 1 || r.categorie === 3) {
+          totaluri[r.banca].totalCat13 += r.suma;
+        }
       });
 
-      const procenteMax = {};
       for (let banca in totaluri) {
-        const total = totaluri[banca].totalGeneral;
-        const prag = praguri[banca].filter(p => total >= p.prag).pop();
-        procenteMax[banca] = prag ? prag.procent : 0;
+        const totalCat13 = totaluri[banca].totalCat13;
+        const prag = praguri[banca].reduce((acc, p) => totalCat13 >= p.prag ? p : acc, praguri[banca][0]);
+        pragAplicat[banca] = prag.procent;
       }
 
       let html = '<table><tr><th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Sursa</th><th>Procent</th><th>Comision</th><th>Acțiune</th></tr>';
@@ -91,9 +95,9 @@
         if (r.categorie === 2) {
           procent = 0.4;
         } else if (r.categorie === 3) {
-          procent = procenteMax[r.banca] / 2; // Corect: jumătate din pragul aplicat
+          procent = pragAplicat[r.banca] / 2;
         } else {
-          procent = procenteMax[r.banca];
+          procent = pragAplicat[r.banca];
         }
         const comision = (r.suma * procent / 100);
         total += comision;
@@ -105,9 +109,8 @@
 
       let explicatii = "";
       for (let banca in totaluri) {
-        const total = totaluri[banca].totalGeneral;
-        const prag = praguri[banca].filter(p => total >= p.prag).pop();
-        explicatii += `<p><strong>${banca}</strong>: Total introdus = ${total.toLocaleString()} RON → Prag aplicat = ${prag.procent.toFixed(2)}%</p>`;
+        const total13 = totaluri[banca].totalCat13;
+        explicatii += `<p><strong>${banca}</strong>: Total introdus (Cat. 1 + 3) = ${total13.toLocaleString()} RON → Prag aplicat = ${pragAplicat[banca].toFixed(2)}%</p>`;
       }
       document.getElementById("explicatii").innerHTML = explicatii;
     }
