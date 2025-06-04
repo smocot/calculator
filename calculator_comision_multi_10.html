@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8" />
-  <title>Calculator Comision cu Prag Corect</title>
+  <title>Calculator Comision - Vizualizare Completă</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
     h2 { color: #4CAF50; }
@@ -12,13 +12,14 @@
     th { background: #4CAF50; color: white; }
     .section { background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
     .btn-sterge { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+    .info-section { margin-top: 30px; font-size: 14px; line-height: 1.5; background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
-  <h2>Calculator Comision - Praguri Cumulativ Corectate</h2>
+  <h2>Calculator Comision - Praguri și Vizualizare</h2>
 
   <div class="section">
-    <input type="text" id="nume" placeholder="Nume" />
+    <input type="text" id="nume" placeholder="Nume client" />
     <select id="banca">
       <option value="BCR">BCR</option>
     </select>
@@ -36,6 +37,7 @@
   </div>
 
   <div id="tabelRezultate"></div>
+  <div class="info-section" id="explicatii"></div>
 
   <script>
     const praguri = {
@@ -56,6 +58,7 @@
       const sursa = document.getElementById("sursa").value;
       const categorie = sursa === "TeoCredit" ? 2 : (sursa.includes("Agent") ? 3 : 1);
       inregistrari.push({ nume, banca, tip, suma, sursa, categorie });
+      calculeazaToate();
     }
 
     function stergeInregistrare(index) {
@@ -94,11 +97,19 @@
         }
         const comision = (r.suma * procent / 100);
         total += comision;
-        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${procent}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
+        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${procent.toFixed(2)}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
       });
 
-      html += `<tr><td colspan="8"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td><td></td></tr></table>`;
+      html += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td><td></td></tr></table>`;
       document.getElementById("tabelRezultate").innerHTML = html;
+
+      let explicatii = "";
+      for (let banca in totaluri) {
+        const total = totaluri[banca].totalGeneral;
+        const prag = praguri[banca].filter(p => total >= p.prag).pop();
+        explicatii += `<p><strong>${banca}</strong>: Total introdus = ${total.toLocaleString()} RON → Prag aplicat = ${prag.procent}%</p>`;
+      }
+      document.getElementById("explicatii").innerHTML = explicatii;
     }
   </script>
 </body>
