@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8" />
-  <title>Calculator Comision - Vizualizare Completă</title>
+  <title>Calculator Comision - Praguri și Vizualizare</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
     h2 { color: #4CAF50; }
@@ -91,13 +91,13 @@
         if (r.categorie === 2) {
           procent = 0.4;
         } else if (r.categorie === 3) {
-          procent = procenteMax[r.banca] / 2;
+          procent = procenteMax[r.banca] / 2; // Corect: jumătate din pragul aplicat
         } else {
           procent = procenteMax[r.banca];
         }
         const comision = (r.suma * procent / 100);
         total += comision;
-        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${procent.toFixed(2)}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
+        html += `<tr><td>${i + 1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.sursa}</td><td>${(procent * 1).toFixed(2)}%</td><td>${comision.toFixed(2)} RON</td><td><button class='btn-sterge' onclick='stergeInregistrare(${i})'>Șterge</button></td></tr>`;
       });
 
       html += `<tr><td colspan="7"><strong>Total</strong></td><td><strong>${total.toFixed(2)} RON</strong></td><td></td></tr></table>`;
