@@ -2,42 +2,29 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <title>Calculator Comision – v31 (All Banks)</title>
+  <title>Calculator Comision – v32 (Fix adăugare)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <style>
-    body{font-family:Roboto,Arial,sans-serif;background:#f5f7fa;padding:2rem}
-    h1{color:#2e7d32}
-    th{background:#2e7d32!important;color:#fff}
-    .debug-col{max-width:210px;font-size:.8rem}
-  </style>
+  <style>body{font-family:Roboto,Arial,sans-serif;background:#f5f7fa;padding:2rem}h1{color:#2e7d32}th{background:#2e7d32!important;color:#fff}.debug-col{max-width:210px;font-size:.8rem}</style>
 </head>
 <body>
 <div class="container">
-  <h1 class="mb-4">Calculator Comision – v31</h1>
-  <!-- Formular -->
+  <h1 class="mb-4">Calculator Comision – v32</h1>
+  <form id="frm" onsubmit="return false;">
   <div class="row g-2 align-items-end">
     <div class="col-md-2"><input id="numeClient" class="form-control" placeholder="Nume client"></div>
-    <div class="col-md-2"><select id="banca" class="form-select">
-      <option>BCR</option><option>PATRIA</option><option>ALPHA</option><option>CREDIT EUROPE</option><option>UNICREDIT</option><option>ING</option><option>RAIFFEISEN</option><option>BT</option><option>BRD</option><option>LIBRA</option><option>FIRST BANK</option><option>GARANTI</option>
-    </select></div>
-    <div class="col-md-2"><select id="tipCredit" class="form-select">
-      <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option><option>NC</option>
-    </select></div>
-    <div class="col-md-2"><input id="suma" type="number" class="form-control" placeholder="Suma"></div>
-    <div class="col-md-2"><select id="provider" class="form-select">
-      <option>RECOMANDARI</option><option>TEOCREDIT</option><option>TCC - ADAMA</option><option>TCC - WHITE POINT</option><option>TCC - ZONA DE NORD</option>
-      <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
-    </select></div>
-    <div class="col-md-2 d-grid"><button onclick="adaugaInregistrare()" class="btn btn-success">Adaugă</button></div>
+    <div class="col-md-2"><select id="banca" class="form-select"> <option>BCR</option><option>PATRIA</option><option>ALPHA</option><option>CREDIT EUROPE</option><option>UNICREDIT</option><option>ING</option><option>RAIFFEISEN</option><option>BT</option><option>BRD</option><option>LIBRA</option><option>FIRST BANK</option><option>GARANTI</option></select></div>
+    <div class="col-md-2"><select id="tipCredit" class="form-select"><option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option><option>NC</option></select></div>
+    <div class="col-md-2"><input id="suma" type="number" class="form-control" placeholder="Suma" min="1"></div>
+    <div class="col-md-2"><select id="provider" class="form-select"><option>RECOMANDARI</option><option>TEOCREDIT</option><option>TCC - ADAMA</option><option>TCC - WHITE POINT</option><option>TCC - ZONA DE NORD</option><option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option></select></div>
+    <div class="col-md-2 d-grid"><button id="btnAdd" class="btn btn-success">Adaugă credit</button></div>
   </div>
-  <!-- CSV / Calcule -->
+  </form>
   <div class="row g-2 mt-2 mb-3 align-items-end">
     <div class="col-md-4"><input type="file" id="csvFile" accept=".csv" class="form-control"></div>
-    <div class="col-md-2 d-grid"><button onclick="incarcaCSV()" class="btn btn-primary">Încarcă CSV</button></div>
-    <div class="col-md-2 d-grid"><button onclick="calculeazaComisioane()" class="btn btn-warning">Calculează</button></div>
+    <div class="col-md-2 d-grid"><button id="btnCsv" class="btn btn-primary">Încarcă CSV</button></div>
+    <div class="col-md-2 d-grid"><button id="btnCalc" class="btn btn-warning">Calculează</button></div>
   </div>
-  <!-- Tabel -->
   <div class="table-responsive">
     <table class="table table-bordered" id="tabel">
       <thead><tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th class="text-end">Suma</th><th>Provider</th><th class="text-end">Proc.</th><th class="text-end">Comision</th><th class="debug-col">Debug</th><th></th></tr></thead>
@@ -48,38 +35,25 @@
   <div id="rezumat" class="summary"></div>
 </div>
 <script>
-/* === GRILA COMPLETĂ PE TOATE BĂNCILE === */
-const fix08   = [{max:Infinity,p:0.008}], fix04=[{max:Infinity,p:0.004}];
-const cat3FromCat1 = (arr) => arr.map(o=>({max:o.max,p: +(o.p/2).toFixed(3)}));
-const GRILA = {
-  BCR:{
-    cat1:[{max:800000,p:0.008},{max:1600000,p:0.009},{max:2400000,p:0.010},{max:5000000,p:0.012},{max:50000000,p:0.014},{max:Infinity,p:0.018}],
-    cat3:[{max:800000,p:0.004},{max:1600000,p:0.005},{max:2400000,p:0.006},{max:5000000,p:0.008},{max:50000000,p:0.010},{max:Infinity,p:0.014}],
-    cat2:0.004, np:{}, nc:{p:0.002}
-  },
-  PATRIA:{cat1:[{max:800000,p:0.008},{max:1600000,p:0.010},{max:2400000,p:0.012},{max:Infinity,p:0.014}], cat3:cat3FromCat1([{max:800000,p:0.008},{max:1600000,p:0.010},{max:2400000,p:0.012},{max:Infinity,p:0.014}]), cat2:0.004, np:{p:0.012}, nc:{}, plafon:10000},
-  ALPHA:{cat1:[{max:800000,p:0.008},{max:1600000,p:0.009},{max:Infinity,p:0.010}], cat3:cat3FromCat1([{max:800000,p:0.008},{max:1600000,p:0.009},{max:Infinity,p:0.010}]), cat2:0.004, np:{}, nc:{}},
-  "CREDIT EUROPE":{cat1:[{max:800000,p:0.008},{max:Infinity,p:0.011}],cat3:cat3FromCat1([{max:800000,p:0.008},{max:Infinity,p:0.011}]),cat2:0.004},
-  UNICREDIT:{cat1:[{max:800000,p:0.008},{max:Infinity,p:0.009}],cat3:cat3FromCat1([{max:800000,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004,np:{p:0.01}, nc:{},minLei:250000},
-  ING:{cat1:[{max:1600000,p:0.008},{max:Infinity,p:0.009}],cat3:cat3FromCat1([{max:1600000,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004,np:{p:0.004}, nc:{p:0.003}},
-  RAIFFEISEN:{cat1:[{max:800000,p:0.008},{max:Infinity,p:0.009}],cat3:cat3FromCat1([{max:800000,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004},
-  BT:{cat1:fix08,cat3:fix04,cat2:0.004,nc:{p:0.008}},
-  BRD:{cat1:fix08,cat3:fix04,cat2:0.004,nc:{p:0.004},plafon:7000},
-  LIBRA:{cat1:fix08,cat3:fix04,cat2:0.004},
-  "FIRST BANK":{cat1:fix08,cat3:fix04,cat2:0.004,np:{p:0.02}},
-  GARANTI:{cat1:fix08,cat3:fix04,cat2:0.004,np:{p:0.012},plafon:5000}
-};
-
+const fix08=[{max:Infinity,p:0.008}], fix04=[{max:Infinity,p:0.004}];
+const cat3=(arr)=>arr.map(o=>({max:o.max,p:+(o.p/2).toFixed(3)}));
+const GRILA={BCR:{cat1:[{max:800000,p:0.008},{max:1600000,p:0.009},{max:2400000,p:0.010},{max:5000000,p:0.012},{max:5e7,p:0.014},{max:Infinity,p:0.018}],cat3:[{max:800000,p:0.004},{max:1600000,p:0.005},{max:2400000,p:0.006},{max:5000000,p:0.008},{max:5e7,p:0.010},{max:Infinity,p:0.014}],cat2:0.004,nc:{p:0.002}},PATRIA:{cat1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:Infinity,p:0.014}],cat3:cat3([{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:Infinity,p:0.014}]),cat2:0.004,np:{p:0.012},plafon:10000},ALPHA:{cat1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:Infinity,p:0.010}],cat3:cat3([{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:Infinity,p:0.010}]),cat2:0.004},"CREDIT EUROPE":{cat1:[{max:8e5,p:0.008},{max:Infinity,p:0.011}],cat3:cat3([{max:8e5,p:0.008},{max:Infinity,p:0.011}]),cat2:0.004},UNICREDIT:{cat1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],cat3:cat3([{max:8e5,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004,minLei:250000},ING:{cat1:[{max:1.6e6,p:0.008},{max:Infinity,p:0.009}],cat3:cat3([{max:1.6e6,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004,nc:{p:0.003}},RAIFFEISEN:{cat1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],cat3:cat3([{max:8e5,p:0.008},{max:Infinity,p:0.009}]),cat2:0.004},BT:{cat1:fix08,cat3:fix04,cat2:0.004,nc:{p:0.008}},BRD:{cat1:fix08,cat3:fix04,cat2:0.004,nc:{p:0.004},plafon:7000},LIBRA:{cat1:fix08,cat3:fix04,cat2:0.004},"FIRST BANK":{cat1:fix08,cat3:fix04,cat2:0.004,np:{p:0.02}},GARANTI:{cat1:fix08,cat3:fix04,cat2:0.004,np:{p:0.012},plafon:5000}};
 const rows=[];
-function categoriaProvider(p){p=p.trim().toUpperCase();if(p.startsWith("AGENT -"))return 3;if(p.startsWith("TCC")||p==="TEOCREDIT")return 2;return 1;}
-function percent(banca,cat,suma,tip){const b=GRILA[banca]||GRILA.BCR;if(["NP","REF NP"].includes(tip))return b.np?.p||0;if(tip==="NC")return b.nc?.p||0;if(cat===2)return b.cat2;const arr=(cat===1?b.cat1:b.cat3);for(const pr of arr){if(suma<=pr.max)return pr.p;}return 0;}
-function plafon(banca,val){const p=GRILA[banca]?.plafon;return p?Math.min(val,p):val;}
-function euroMinOk(banca,tip,suma){const m=GRILA[banca]?.minLei;if(!m||!(["IP","REF IP"].includes(tip)))return true;return suma>=m;}
-function formatNr(x){return x.toLocaleString("ro-RO");}
-
-function adaugaInregistrare(){const nume=document.getElementById("numeClient").value||"N/A";const banca=document.getElementById("banca").value;const tip=document.getElementById("tipCredit").value;const suma=parseFloat(document.getElementById("suma").value);const provider=document.getElementById("provider").value;if(!suma||suma<=0)return alert("Sumă invalidă");rows.push({nume,banca,tip,suma,provider});document.getElementById("suma").value="";render();}
-function incarcaCSV(){const f=document.getElementById("csvFile").files[0];if(!f)return;const r=new FileReader();r.onload=e=>{e.target.result.split(/\r?\n/).forEach(l=>{const [n,b,t,s,p]=l.split(",");if(b&&s&&!isNaN(parseFloat(s)))rows.push({nume:n||"N/A",banca:b.trim(),tip:t.trim(),suma:parseFloat(s),provider:p.trim()});});render();};r.readAsText(f);}
+function catProvider(p){p=p.toUpperCase();if(p.startsWith("AGENT -"))return 3;if(p.startsWith("TCC")||p==="TEOCREDIT")return 2;return 1;}
+function pct(b,cat,s,sum,t){const g=GRILA[b]||GRILA.BCR;if(["NP","REF NP"].includes(t))return g.np?.p||0;if(t==="NC")return g.nc?.p||0;if(cat===2)return g.cat2;const arr=cat===1?g.cat1:g.cat3;return arr.find(x=>sum<=x.max).p;}
+function plaf(b,val){const p=GRILA[b]?.plafon;return p?Math.min(val,p):val;}
+function euroMin(b,t,s){const m=GRILA[b]?.minLei;if(!m||!["IP","REF IP"].includes(t))return true;return s>=m;}
+function num(x){return x.toLocaleString("ro-RO");}
+// add row
+function adaugaInregistrare(){const n=document.getElementById("numeClient").value||"N/A";const b=document.getElementById("banca").value;const t=document.getElementById("tipCredit").value;const s=parseFloat(document.getElementById("suma").value);const p=document.getElementById("provider").value;if(!s||s<=0)return alert("Sumă invalidă");rows.push({nume:n,banca:b,tip:t,suma:s,provider:p});document.getElementById("suma").value="";render();}
+// CSV
+function incarcaCSV(){const f=document.getElementById("csvFile").files[0];if(!f)return;new Response(f).text().then(txt=>{txt.split(/\r?\n/).forEach(l=>{const [n,b,t,s,p]=l.split(",");if(b&&s&&!isNaN(parseFloat(s)))rows.push({nume:n||"N/A",banca:b.trim(),tip:t.trim(),suma:+s,provider:p.trim()});});render();});}
+function calculeazaComisioane(){rows.forEach(r=>r.cat=catProvider(r.provider));const cumul={};rows.forEach(r=>{if(r.cat!==2)cumul[r.banca]=(cumul[r.banca]||0)+r.suma;});let total=0;rows.forEach(r=>{if(!euroMin(r.banca,r.tip,r.suma)){Object.assign(r,{procent:0,comision:0,debug:"Sub minim Unicredit"});return;}const p=pct(r.banca,r.cat,cumul[r.banca]||r.suma,r.tip);r.procent=p;r.comision=plaf(r.banca,r.suma*p);r.debug=`c${r.cat}|cum=${num(cumul[r.banca]||r.suma)}`;total+=r.comision;});document.getElementById("totalComision").innerText=num(total.toFixed(2))+" RON";render();}
 function sterge(i){rows.splice(i,1);render();}
-function calculeazaComisioane(){// categorise
-rows.forEach(r=>r.cat=categoriaProvider(r.provider));const cumulate={};rows.forEach(r=>{if(r.cat!==2)cumulate[r.banca]=(cumulate[r.banca]||0)+r.suma;});let total=0;rows.forEach(r=>{if(!euroMinOk(r.banca,r.tip,r.suma)){Object.assign(r,{procent:0,comision:0,debug:"Sub minim Unicredit"});return;}const pct=percent(r.banca,r.cat,cumulate[r.banca]||r.suma,r.tip);r.procent=pct;let com=r.suma*pct;com=plafon(r.banca,com);r.comision=com;r.debug=`c${r.cat} | cumul=${formatNr(cumulate[r.banca]||r.suma)}`;total+=com;});document.getElementById("totalComision").innerText=formatNr(total.toFixed(2))+" RON";render();}
-function render(){const tb=document.querySelector("#tabel tbody");tb.innerHTML="";rows.forEach((r,i)=>{tb.insertAdjacentHTML("beforeend",`<tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td class='text-end'>${formatNr(r.suma)}</td><td>${r.provider}</td><td class='text-end'>${r.procent? (r.procent*100).toFixed(2)+'%' :''}</td><td class='text-end'>${r.comision? formatNr(r.comision.toFixed(2))+' RON':''}</td><td class='debug-col'>${r.debug||''}</td><td><button class='btn btn-sm btn-danger' onclick='ster
+function render(){const tb=document.querySelector("#tabel tbody");tb.innerHTML="";rows.forEach((r,i)=>{tb.insertAdjacentHTML("beforeend",`<tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td class='text-end'>${num(r.suma)}</td><td>${r.provider}</td><td class='text-end'>${r.procent? (r.procent*100).toFixed(2)+'%' :''}</td><td class='text-end'>${r.comision? num(r.comision.toFixed(2))+' RON':''}</td><td class='debug-col'>${r.debug||''}</td><td><button class='btn btn-danger btn-sm' onclick='sterge(${i})'>Șterge</button></td></tr>`);});}
+// Event listeners (sa meargă enter)
+document.getElementById("btnAdd")?.addEventListener("click",adaugaInregistrare);
+document.getElementById("btnCsv")?.addEventListener("click",incarcaCSV);
+document.getElementById("btnCalc")?.addEventListener("click",calculeazaComisioane);
+</script>
+</body></html>
