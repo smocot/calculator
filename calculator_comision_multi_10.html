@@ -2,28 +2,28 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<title>Calculator Comision – simplu</title>
+<title>Calculator Comision</title>
 <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;margin:0;padding:24px}
-    h1{color:#2e7d32;margin-top:0}
-    input,select,button{padding:6px 8px;margin:4px}
-    table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff}
-    th,td{border:1px solid #ccc;padding:6px;text-align:left}
-    th{background:#2e7d32;color:#fff}
-    .right{text-align:right}
-    .btn{cursor:pointer;border:none;border-radius:4px}
-    .btn-add{background:#2e7d32;color:#fff}
-    .btn-calc{background:#f6b700}
-    .btn-csv {background:#0376ff;color:#fff}
-    .btn-del {background:#d33;color:#fff}
+  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;padding:24px;margin:0}
+  h1{margin:0 0 16px;color:#2e7d32}
+  input,select,button{padding:6px 8px;margin:4px;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff}
+  th,td{border:1px solid #ccc;padding:6px}
+  th{background:#2e7d32;color:#fff}
+  .right{text-align:right}
+  .btn{cursor:pointer;border:none;border-radius:4px}
+  .btn-add{background:#2e7d32;color:#fff}
+  .btn-calc{background:#f6b700}
+  .btn-csv{background:#0376ff;color:#fff}
+  .btn-del{background:#d33;color:#fff}
 </style>
 </head>
 <body>
 
 <h1>Calculator Comision</h1>
 
-<!-- formular simplu -->
-<input id="numeClient"  placeholder="Nume client">
+<!-- formular -->
+<input id="numeClient" placeholder="Nume client">
 <select id="banca">
   <option>BCR</option><option>PATRIA</option><option>ALPHA</option><option>CREDIT EUROPE</option>
   <option>UNICREDIT</option><option>ING</option><option>RAIFFEISEN</option><option>BT</option>
@@ -39,8 +39,8 @@
   <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
 </select>
 <button class="btn btn-add" onclick="addRow()">Adaugă credit</button>
-<button class="btn btn-calc" onclick="calc()">Calculează</button>
-<br>
+<button class="btn btn-calc" onclick="calc()">Calculează</button><br>
+
 <input type="file" id="csvFile" accept=".csv">
 <button class="btn btn-csv" onclick="loadCsv()">Încarcă CSV</button>
 
@@ -58,34 +58,42 @@
   </tfoot>
 </table>
 
-<div id="rezumat"></div>
+<div id="rezumat" style="margin-top:16px"></div>
 
 <script>
-/* === grilă praguri === */
+/* ============ GRILĂ PRAGURI ============ */
 const fix08=[{max:Infinity,p:0.008}], fix04=[{max:Infinity,p:0.004}];
-const half=a=>a.map(o=>({max:o.max,p:+(o.p/2).toFixed(3)}));
+const half = a => a.map(o=>({max:o.max,p:+(o.p/2).toFixed(3)}));
 const G={
- BCR:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}],
-      c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}]),
-      c2:0.004,nc:{p:0.002}},
- PATRIA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.01},{max:2.4e6,p:0.012},{max:1/0,p:0.014}],
-         c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.01},{max:2.4e6,p:0.012},{max:1/0,p:0.014}]),c2:0.004,np:{p:0.012},pl:10000},
- ALPHA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.01}],
-        c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.01}]),c2:0.004},
- "CREDIT EUROPE":{c1:[{max:8e5,p:0.008},{max:1/0,p:0.011}],c3:half([{max:8e5,p:0.008},{max:1/0,p:0.011}]),c2:0.004},
- UNICREDIT:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],c3:half([{max:8e5,p:0.008},{max:1/0,p:0.009}]),c2:0.004, min:250000},
- ING:{c1:[{max:1.6e6,p:0.008},{max:1/0,p:0.009}],c3:half([{max:1.6e6,p:0.008},{max:1/0,p:0.009}]),c2:0.004,nc:{p:0.003}},
- RAIFFEISEN:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],c3:half([{max:8e5,p:0.008},{max:1/0,p:0.009}]),c2:0.004},
- BT:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.008}},
- BRD:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.004},pl:7000},
- LIBRA:{c1:fix08,c3:fix04,c2:0.004},
- "FIRST BANK":{c1:fix08,c3:fix04,c2:0.004,np:{p:0.02}},
- GARANTI:{c1:fix08,c3:fix04,c2:0.004,np:{p:0.012},pl:5000}
+  BCR:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}],
+       c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}]),
+       c2:0.004,nc:{p:0.002}},
+  PATRIA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:1/0,p:0.014}],
+          c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:1/0,p:0.014}]),
+          c2:0.004,np:{p:0.012},pl:10000},
+  ALPHA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.010}],
+         c3:half([{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.010}]),
+         c2:0.004},
+  "CREDIT EUROPE":{c1:[{max:8e5,p:0.008},{max:1/0,p:0.011}],
+                   c3:half([{max:8e5,p:0.008},{max:1/0,p:0.011}]),c2:0.004},
+  UNICREDIT:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
+             c3:half([{max:8e5,p:0.008},{max:1/0,p:0.009}]),
+             c2:0.004,min:250000},
+  ING:{c1:[{max:1.6e6,p:0.008},{max:1/0,p:0.009}],
+       c3:half([{max:1.6e6,p:0.008},{max:1/0,p:0.009}]),
+       c2:0.004,nc:{p:0.003}},
+  RAIFFEISEN:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
+              c3:half([{max:8e5,p:0.008},{max:1/0,p:0.009}]),c2:0.004},
+  BT:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.008}},
+  BRD:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.004},pl:7000},
+  LIBRA:{c1:fix08,c3:fix04,c2:0.004},
+  "FIRST BANK":{c1:fix08,c3:fix04,c2:0.004,np:{p:0.020}},
+  GARANTI:{c1:fix08,c3:fix04,c2:0.004,np:{p:0.012},pl:5000}
 };
+/* ======================================= */
 
-/* === utilitare === */
-const $ = id=>document.getElementById(id);
 const rows=[];
+const $ = id => document.getElementById(id);
 const cat = p => p.toUpperCase().startsWith("AGENT -")?3:(p.toUpperCase().startsWith("TCC")||p==="TEOCREDIT"?2:1);
 const fmt = n => n.toLocaleString("ro-RO");
 
@@ -100,15 +108,14 @@ function procent(b,cat,sum,tip){
 const plaf=(b,v)=>G[b]?.pl?Math.min(v,G[b].pl):v;
 const minOK=(b,t,s)=>!G[b]?.min || !["IP","REF IP"].includes(t) || s>=G[b].min;
 
-/* === acţiuni === */
+/* ----------- UI handlers ----------- */
 function addRow(){
-  const suma=parseFloat($("suma").value);
-  if(!suma){alert("Sumă invalidă");return;}
+  const sum=parseFloat($("suma").value);
+  if(!sum){alert("Sumă invalidă");return;}
   rows.push({nume:$("numeClient").value||"N/A",banca:$("banca").value,tip:$("tipCredit").value,
-             suma,provider:$("provider").value});
+             suma:sum,provider:$("provider").value});
   $("suma").value=""; render();
 }
-
 function loadCsv(){
   const f=$("csvFile").files[0]; if(!f) return;
   f.text().then(t=>{
@@ -118,43 +125,35 @@ function loadCsv(){
     }); render();
   });
 }
-
 function calc(){
   rows.forEach(r=>r.cat=cat(r.provider));
-  /* cumul pe bancă pt Cat 1+3 */
-  const cum={}; rows.forEach(r=>{if(r.cat!==2) cum[r.banca]=(cum[r.banca]||0)+r.suma;});
+  /* cumulăm Cat 1+2+3 pe bancă */
+  const cum={}; rows.forEach(r=>cum[r.banca]=(cum[r.banca]||0)+r.suma);
   let total=0;
   rows.forEach(r=>{
     if(!minOK(r.banca,r.tip,r.suma)){r.procent=0;r.comision=0;return;}
     r.procent=procent(r.banca,r.cat,cum[r.banca],r.tip);
     r.comision=plaf(r.banca,r.suma*r.procent); total+=r.comision;
   });
-  $("tot").innerText = fmt(total.toFixed(2))+" RON";
+  $("tot").innerText=fmt(total.toFixed(2))+" RON";
   render();
-  /* rezumat praguri */
-  $("rezumat").innerHTML = Object.entries(cum).map(([b,s])=>{
-     const pr = procent(b,1,s,"IP")*100;
-     return `<p><strong>${b}:</strong> total Cat1+3 = ${fmt(s)} RON → prag = ${pr.toFixed(2)}%</p>`;
+  $("rezumat").innerHTML=Object.entries(cum).map(([b,s])=>{
+    const pr=procent(b,1,s,"IP")*100;
+    return `<p><strong>${b}</strong>: total Cat1+2+3 = ${fmt(s)} RON → prag = ${pr.toFixed(2)}%</p>`;
   }).join("");
 }
-
 function render(){
   const tb=document.querySelector("#tabel tbody"); tb.innerHTML="";
   rows.forEach((r,i)=>{
-     tb.insertAdjacentHTML("beforeend",`<tr>
-        <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-        <td class="right">${fmt(r.suma)}</td><td>${r.provider}</td>
-        <td class="right">${r.procent?(r.procent*100).toFixed(2)+'%':''}</td>
-        <td class="right">${r.comision?fmt(r.comision.toFixed(2))+' RON':''}</td>
-        <td><button class="btn btn-del" onclick="rows.splice(${i},1);render()">Șterge</button></td>
-     </tr>`);
+    tb.insertAdjacentHTML("beforeend",`<tr>
+      <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+      <td class="right">${fmt(r.suma)}</td><td>${r.provider}</td>
+      <td class="right">${r.procent?(r.procent*100).toFixed(2)+"%":""}</td>
+      <td class="right">${r.comision?fmt(r.comision.toFixed(2))+" RON":""}</td>
+      <td><button class="btn btn-del" onclick="rows.splice(${i},1);render()">Șterge</button></td>
+    </tr>`);
   });
 }
-
-/* === ataşare butoane === */
-document.getElementById("btnAdd").onclick = addRow;
-document.getElementById("btnCsv").onclick = loadCsv;
-document.getElementById("btnCalc").onclick = calc;
 </script>
 </body>
 </html>
