@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<title>Calculator Comision – corect</title>
+<title>Calculator Comision</title>
 <style>
  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;padding:24px}
  h1{color:#2e7d32;margin-top:0}
@@ -11,148 +11,139 @@
  th,td{border:1px solid #ccc;padding:6px} th{background:#2e7d32;color:#fff}
  .right{text-align:right}
  .btn{cursor:pointer;border:none;border-radius:4px}
- .btn-add{background:#2e7d32;color:#fff} .btn-calc{background:#f6b700}
- .btn-csv{background:#0376ff;color:#fff} .btn-del{background:#d33;color:#fff}
+ .btn-add{background:#2e7d32;color:#fff}
+ .btn-calc{background:#f6b700}
+ .btn-csv{background:#0376ff;color:#fff}
+ .btn-del{background:#d33;color:#fff}
 </style>
 </head>
 <body>
-
 <h1>Calculator Comision</h1>
 
-<input id="numeClient" placeholder="Nume client">
+<input id="nume" placeholder="Nume client">
 <select id="banca">
   <option>BCR</option><option>PATRIA</option><option>ALPHA</option><option>CREDIT EUROPE</option>
   <option>UNICREDIT</option><option>ING</option><option>RAIFFEISEN</option><option>BT</option>
   <option>BRD</option><option>LIBRA</option><option>FIRST BANK</option><option>GARANTI</option>
 </select>
-<select id="tipCredit">
+<select id="tip">
   <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option><option>NC</option>
 </select>
 <input id="suma" type="number" min="1" placeholder="Suma">
-<select id="provider">
+<select id="prov">
   <option>RECOMANDARI</option><option>TEOCREDIT</option>
   <option>TCC - ADAMA</option><option>TCC - WHITE POINT</option><option>TCC - ZONA DE NORD</option>
   <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
 </select>
-<button class="btn btn-add" onclick="addRow()">Adaugă</button>
+<button class="btn btn-add" onclick="addRow()">Adaugă credit</button>
 <button class="btn btn-calc" onclick="calc()">Calculează</button><br>
-<input type="file" id="csvFile" accept=".csv">
-<button class="btn btn-csv" onclick="loadCsv()">Încarcă CSV</button>
+<input type="file" id="csv" accept=".csv">
+<button class="btn btn-csv" onclick="loadCSV()">Încarcă CSV</button>
 
-<table id="tabel">
+<table id="tbl">
  <thead>
    <tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th>
        <th class="right">Suma</th><th>Provider</th>
        <th class="right">Proc.</th><th class="right">Comision</th><th></th></tr>
  </thead>
  <tbody></tbody>
- <tfoot>
-   <tr><td colspan="6" class="right"><strong>Total</strong></td>
-       <td id="tot" class="right" colspan="2"></td><td></td></tr>
- </tfoot>
+ <tfoot><tr><td colspan="6" class="right"><strong>Total</strong></td>
+          <td id="tot" class="right" colspan="2"></td><td></td></tr></tfoot>
 </table>
 
-<div id="rezumat" style="margin-top:16px"></div>
+<div id="rez" style="margin-top:16px"></div>
 
 <script>
-/* ------- GRILĂ CU PROCENTE REALE Cat 3 -------- */
-const fix08=[{max:Infinity,p:0.008}], fix04=[{max:Infinity,p:0.004}];
+/* prag definitiv 0,008 înseamnă 0,80 %  */
+const FIX08=[{max:1/0,p:0.008}],FIX04=[{max:1/0,p:0.004}];
+
 const G={
-BCR:{
-  c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}],
-  c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:2.4e6,p:0.006},{max:5e6,p:0.008},{max:5e7,p:0.010},{max:1/0,p:0.014}],
-  c2:0.004,nc:{p:0.002}},
-PATRIA:{
-  c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:1/0,p:0.014}],
-  c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.006},{max:2.4e6,p:0.008},{max:1/0,p:0.010}],
-  c2:0.004,np:{p:0.012},pl:10000},
-ALPHA:{
-  c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.010}],
-  c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:1/0,p:0.006}],
-  c2:0.004},
-"CREDIT EUROPE":{
-  c1:[{max:8e5,p:0.008},{max:1/0,p:0.011}],
-  c3:[{max:8e5,p:0.004},{max:1/0,p:0.007}],
-  c2:0.004},
-UNICREDIT:{
-  c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
-  c3:[{max:8e5,p:0.004},{max:1/0,p:0.005}],
-  c2:0.004,min:250000},
-ING:{
-  c1:[{max:1.6e6,p:0.008},{max:1/0,p:0.009}],
-  c3:[{max:1.6e6,p:0.004},{max:1/0,p:0.005}],
-  c2:0.004,nc:{p:0.003}},
-RAIFFEISEN:{
-  c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
-  c3:[{max:8e5,p:0.004},{max:1/0,p:0.005}],
-  c2:0.004},
-BT:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.008}},
-BRD:{c1:fix08,c3:fix04,c2:0.004,nc:{p:0.004},pl:7000},
-LIBRA:{c1:fix08,c3:fix04,c2:0.004},
-"FIRST BANK":{c1:fix08,c3:fix04,c2:0.004,np:{p:0.020}},
-GARANTI:{c1:fix08,c3:fix04,c2:0.004,np:{p:0.012},pl:5000}
+BCR:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:1/0,p:0.018}],
+     c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:2.4e6,p:0.006},{max:5e6,p:0.008},{max:5e7,p:0.010},{max:1/0,p:0.014}],
+     c2:0.004,nc:{p:0.002},np1:0.012,np2:0.010},
+PATRIA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:1/0,p:0.014}],
+        c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.006},{max:2.4e6,p:0.008},{max:1/0,p:0.010}],
+        c2:0.004,np1:0.012,np2:0.010,pl:10000},
+ALPHA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:1/0,p:0.010}],
+       c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:1/0,p:0.006}],
+       c2:0.004},
+"CREDIT EUROPE":{c1:[{max:8e5,p:0.008},{max:1/0,p:0.011}],
+                 c3:[{max:8e5,p:0.004},{max:1/0,p:0.007}],
+                 c2:0.004},
+UNICREDIT:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
+           c3:[{max:8e5,p:0.004},{max:1/0,p:0.005}],
+           c2:0.004,np1:0.020,np2:0.010,min:250000},
+ING:{c1:[{max:1.6e6,p:0.008},{max:1/0,p:0.009}],
+     c3:[{max:1.6e6,p:0.004},{max:1/0,p:0.005}],
+     c2:0.004,np1:0.004,np2:0.004,nc:{p:0.003}},
+RAIFFEISEN:{c1:[{max:8e5,p:0.008},{max:1/0,p:0.009}],
+            c3:[{max:8e5,p:0.004},{max:1/0,p:0.005}],
+            c2:0.004},
+BT:{c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.008}},
+BRD:{c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.004},pl:7000},
+LIBRA:{c1:FIX08,c3:FIX04,c2:0.004},
+"FIRST BANK":{c1:FIX08,c3:FIX04,c2:0.004,np1:0.020,np2:0.010},
+GARANTI:{c1:FIX08,c3:FIX04,c2:0.004,np1:0.012,np2:0.010,pl:5000}
 };
-/* ---------------------------------------------- */
 
 const rows=[];
-const $=id=>document.getElementById(id);
-const cat=p=>p.toUpperCase().startsWith("AGENT -")?3:(p.toUpperCase().startsWith("TCC")||p==="TEOCREDIT"?2:1);
-const fmt=n=>n.toLocaleString("ro-RO");
+const el=id=>document.getElementById(id);
+const fmt=x=>x.toLocaleString("ro-RO");
+const cat=p=>p.startsWith("AGENT")?3:(p.startsWith("TCC")||p==="TEOCREDIT"?2:1);
 
-function procent(b,cat,sum,t){
- const g=G[b]||G.BCR;
- if(["NP","REF NP"].includes(t)) return g.np?.p||0;
- if(t==="NC") return g.nc?.p||0;
- if(cat===2)  return g.c2;
- const arr=cat===1?g.c1:g.c3;
- return arr.find(o=>sum<=o.max).p;
-}
-const plaf=(b,v)=>G[b]?.pl?Math.min(v,G[b].pl):v;
-const minOK=(b,t,s)=>!G[b]?.min || !["IP","REF IP"].includes(t) || s>=G[b].min;
-
-/* -- UI -- */
 function addRow(){
-  const sum=parseFloat($("suma").value);
-  if(!sum){alert("Sumă invalidă");return;}
-  rows.push({nume:$("numeClient").value||"N/A",banca:$("banca").value,tip:$("tipCredit").value,
-             suma:sum,provider:$("provider").value});
-  $("suma").value=""; render();
+ const s=parseFloat(el("suma").value);
+ if(!s){alert("Sumă?");return;}
+ rows.push({nume:el("nume").value||"N/A",banca:el("banca").value,tip:el("tip").value,
+            suma:s,prov:el("prov").value});
+ el("suma").value=""; render();
 }
-function loadCsv(){
-  const f=$("csvFile").files[0]; if(!f)return;
-  f.text().then(t=>{t.split(/\\r?\\n/).forEach(l=>{
-    const[n,b,tp,s,p]=l.split(","); if(b&&s&&!isNaN(+s))
-      rows.push({nume:n||"N/A",banca:b.trim(),tip:tp.trim(),suma:+s,provider:p.trim()});
+function loadCSV(){
+ const f=el("csv").files[0]; if(!f)return;
+ f.text().then(t=>{t.split(/\\r?\\n/).forEach(l=>{
+  const [n,b,tp,s,p]=l.split(","); if(b&&s&&!isNaN(+s))
+   rows.push({nume:n||"N/A",banca:b.trim(),tip:tp.trim(),suma:+s,prov:p.trim()});
   }); render();});
 }
+
+function pct(b,ct,sum,t){
+ const g=G[b]; if(["NP","REF NP"].includes(t)){
+   if(ct===3) return 0;
+   return ct===2?g.np2:g.np1;
+ }
+ if(t==="NC") return g.nc?.p||0;
+ if(ct===2) return g.c2;
+ return (ct===1?g.c1:g.c3).find(o=>sum<=o.max).p;
+}
+const plaf=(b,v)=>G[b].pl?Math.min(v,G[b].pl):v;
+const minOk=(b,t,s)=>!G[b].min||!["IP","REF IP"].includes(t)||s>=G[b].min;
+
 function calc(){
-  rows.forEach(r=>r.cat=cat(r.provider));
-  const cum={}; rows.forEach(r=>cum[r.banca]=(cum[r.banca]||0)+r.suma); // Cat1+2+3
-  let total=0;
-  rows.forEach(r=>{
-    if(!minOK(r.banca,r.tip,r.suma)){r.procent=0;r.comision=0;return;}
-    r.procent=procent(r.banca,r.cat,cum[r.banca],r.tip);
-    r.comision=plaf(r.banca,r.suma*r.procent); total+=r.comision;
-  });
-  $("tot").innerText=fmt(total.toFixed(2))+" RON";
-  render();
-  $("rezumat").innerHTML=Object.entries(cum).map(([b,s])=>{
-     const pr=procent(b,1,s,"IP")*100;
-     return `<p><strong>${b}</strong>: total = ${fmt(s)} RON → prag = ${pr.toFixed(2)}%</p>`;
-  }).join("");
+ rows.forEach(r=>r.ct=cat(r.prov));
+ const cum={}; rows.forEach(r=>cum[r.banca]=(cum[r.banca]||0)+r.suma);
+ let tot=0;
+ rows.forEach(r=>{
+    if(!minOk(r.banca,r.tip,r.suma)){r.p=0;r.c=0;return;}
+    r.p=pct(r.banca,r.ct,cum[r.banca],r.tip);
+    r.c=plaf(r.banca,r.suma*r.p); tot+=r.c;
+ });
+ el("tot").innerText=fmt(tot.toFixed(2))+" RON";
+ el("rez").innerHTML=Object.entries(cum).map(([b,s])=>{
+   const pr=pct(b,1,s,"IP")*100;
+   return `<p><strong>${b}</strong>: total Cat1+3 = ${fmt(s)} RON → prag = ${pr.toFixed(2)}%</p>`;
+ }).join("");
+ render();
 }
 function render(){
-  const tbody=document.querySelector("#tabel tbody"); tbody.innerHTML="";
-  rows.forEach((r,i)=>{
-    tbody.insertAdjacentHTML("beforeend",`
-      <tr>
-        <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-        <td class="right">${fmt(r.suma)}</td><td>${r.provider}</td>
-        <td class="right">${r.procent?(r.procent*100).toFixed(2)+'%':''}</td>
-        <td class="right">${r.comision?fmt(r.comision.toFixed(2))+' RON':''}</td>
-        <td><button class="btn btn-del" onclick="rows.splice(${i},1);render()">Șterge</button></td>
-      </tr>`);
-  });
+ const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
+ rows.forEach((r,i)=>{
+  tb.insertAdjacentHTML("beforeend",`
+   <tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+       <td class="right">${fmt(r.suma)}</td><td>${r.prov}</td>
+       <td class="right">${r.p?(r.p*100).toFixed(2)+'%' : ''}</td>
+       <td class="right">${r.c?fmt(r.c.toFixed(2))+' RON':''}</td>
+       <td><button class="btn btn-del" onclick="rows.splice(${i},1);render()">Șterge</button></td></tr>`);
+ });
 }
 </script>
 </body>
