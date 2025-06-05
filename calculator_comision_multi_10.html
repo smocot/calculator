@@ -2,7 +2,9 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <title>Calculator Comision - v29</title>
+  <title>Calculator Comision - Praguri și Vizualizare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -15,21 +17,12 @@
       color: #2e7d32;
       margin-bottom: 1rem;
     }
-    input, select, button {
-      padding: 0.5rem;
-      margin-right: 0.5rem;
+    .form-control, .form-select, .btn {
       margin-bottom: 1rem;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
       background-color: white;
       margin-bottom: 2rem;
-    }
-    th, td {
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      text-align: left;
     }
     th {
       background-color: #4caf50;
@@ -49,166 +42,64 @@
   </style>
 </head>
 <body>
-<h1>Calculator Comision - v29</h1>
-
-<input type="text" id="numeClient" placeholder="Nume client">
-<select id="banca">
-  <option>BCR</option>
-  <option>BRD</option>
-  <option>ING</option>
-  <option>UNICREDIT</option>
-  <option>GARANTI</option>
-  <option>FIRST BANK</option>
-  <option>ALPHA</option>
-  <option>RAIFFEISEN</option>
-</select>
-<select id="tipCredit">
-  <option>IP</option>
-  <option>REF IP</option>
-  <option>NP</option>
-  <option>REF NP</option>
-  <option>NOUA CASA</option>
-</select>
-<input type="number" id="suma" placeholder="Suma">
-<select id="provider">
-  <option>RECOMANDARI</option>
-  <option>TEOCREDIT</option>
-  <option>AGENT - DAF IMOBILIARE</option>
-  <option>AGENT - BEE IMOBILIARE</option>
-  <option>ADAMA</option>
-  <option>WHITE POINT</option>
-</select>
-<button onclick="adaugaInregistrare()">Adaugă</button>
-<button onclick="calculeazaComisioane()">Calculează</button>
-<input type="file" id="csvFile" accept=".csv">
-<button onclick="incarcaCSV()">Încarcă CSV</button>
-
-<table id="tabel">
-  <thead>
-  <tr>
-    <th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Provider</th><th>Procent</th><th>Comision</th><th>Acțiune</th>
-  </tr>
-  </thead>
-  <tbody></tbody>
-  <tfoot>
-  <tr><td colspan="7">Total</td><td id="totalComision"></td><td></td></tr>
-  </tfoot>
-</table>
-
-<p id="rezumat" class="summary"></p>
-
-<script>
-const praguri = {
-  "BCR": [
-    { min: 0, max: 800000, percent: 0.008 },
-    { min: 800001, max: 1600000, percent: 0.009 },
-    { min: 1600001, max: 2400000, percent: 0.010 },
-    { min: 2400001, max: 5000000, percent: 0.012 },
-    { min: 5000001, max: 50000000, percent: 0.014 },
-    { min: 50000001, max: Infinity, percent: 0.018 }
-  ],
-  "BRD": [
-    { min: 0, max: Infinity, percent: 0.008 }
-  ],
-  "ING": [
-    { min: 0, max: 1600000, percent: 0.008 },
-    { min: 1600001, max: Infinity, percent: 0.009 }
-  ],
-  "UNICREDIT": [
-    { min: 0, max: 800000, percent: 0.008 },
-    { min: 800001, max: Infinity, percent: 0.009 }
-  ],
-  "GARANTI": [
-    { min: 0, max: Infinity, percent: 0.008 }
-  ],
-  "FIRST BANK": [
-    { min: 0, max: Infinity, percent: 0.008 }
-  ],
-  "ALPHA": [
-    { min: 0, max: 800000, percent: 0.008 },
-    { min: 800001, max: 1600000, percent: 0.009 },
-    { min: 1600001, max: Infinity, percent: 0.010 }
-  ],
-  "RAIFFEISEN": [
-    { min: 0, max: 800000, percent: 0.008 },
-    { min: 800001, max: Infinity, percent: 0.009 }
-  ]
-};
-
-const inregistrari = [];
-
-function adaugaInregistrare() {
-  const nume = document.getElementById("numeClient").value || "N/A";
-  const banca = document.getElementById("banca").value;
-  const tip = document.getElementById("tipCredit").value;
-  const suma = parseFloat(document.getElementById("suma").value);
-  const provider = document.getElementById("provider").value;
-  if (!suma || suma <= 0) return alert("Introduceți o sumă validă.");
-  inregistrari.push({ nume, banca, tip, suma, provider });
-  document.getElementById("suma").value = "";
-  afiseazaInregistrari();
-}
-
-function afiseazaInregistrari() {
-  const tbody = document.querySelector("#tabel tbody");
-  tbody.innerHTML = "";
-  inregistrari.forEach((r, i) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma.toLocaleString()}</td>
-      <td>${r.provider}</td><td>${r.procent ? (r.procent * 100).toFixed(2) + "%" : ""}</td><td>${r.comision ? r.comision.toFixed(2).toLocaleString() + " RON" : ""}</td>
-      <td><button class='delete' onclick='sterge(${i})'>Șterge</button></td>`;
-    tbody.appendChild(row);
-  });
-}
-
-function calculeazaComisioane() {
-  const banci = [...new Set(inregistrari.map(r => r.banca))];
-  let totalComision = 0;
-  let rezumat = "";
-  banci.forEach(banca => {
-    const sumaTotala = inregistrari.filter(r => r.banca === banca).reduce((a, b) => a + b.suma, 0);
-    const prag = praguri[banca].find(p => sumaTotala >= p.min && sumaTotala <= p.max) || { percent: 0 };
-    inregistrari.forEach(r => {
-      if (r.banca === banca) {
-        if (r.provider === "TEOCREDIT" || r.provider.includes("TCC")) {
-          r.procent = 0.004;
-        } else if (r.provider.startsWith("AGENT")) {
-          r.procent = prag.percent * 0.6667;
-        } else {
-          r.procent = prag.percent;
-        }
-        r.comision = r.suma * r.procent;
-        totalComision += r.comision;
-      }
-    });
-    rezumat += `<p><strong>${banca}</strong>: Total = ${sumaTotala.toLocaleString()} RON → Prag aplicat = ${(prag.percent * 100).toFixed(2)}%</p>`;
-  });
-  document.getElementById("totalComision").innerText = totalComision.toFixed(2).toLocaleString() + " RON";
-  document.getElementById("rezumat").innerHTML = rezumat;
-  afiseazaInregistrari();
-}
-
-function sterge(index) {
-  inregistrari.splice(index, 1);
-  afiseazaInregistrari();
-}
-
-function incarcaCSV() {
-  const file = document.getElementById("csvFile").files[0];
-  if (!file) return alert("Alegeți un fișier CSV.");
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const lines = e.target.result.split("\n");
-    for (const line of lines) {
-      const [nume, banca, tip, sumaStr, provider] = line.split(",");
-      const suma = parseFloat(sumaStr);
-      if (!isNaN(suma)) inregistrari.push({ nume, banca, tip, suma, provider });
-    }
-    afiseazaInregistrari();
-  };
-  reader.readAsText(file);
-}
-</script>
+<div class="container">
+  <h1>Calculator Comision</h1>
+  <div class="row">
+    <div class="col-md-2"><input type="text" id="numeClient" class="form-control" placeholder="Nume client"></div>
+    <div class="col-md-2">
+      <select id="banca" class="form-select">
+        <option>BCR</option>
+        <option>BRD</option>
+        <option>ING</option>
+        <option>UNICREDIT</option>
+        <option>GARANTI</option>
+        <option>FIRST BANK</option>
+        <option>ALPHA</option>
+        <option>RAIFFEISEN</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select id="tipCredit" class="form-select">
+        <option>IP</option>
+        <option>REF IP</option>
+        <option>NP</option>
+        <option>REF NP</option>
+        <option>NC</option>
+      </select>
+    </div>
+    <div class="col-md-2"><input type="number" id="suma" class="form-control" placeholder="Suma"></div>
+    <div class="col-md-2">
+      <select id="provider" class="form-select">
+        <option>RECOMANDARI</option>
+        <option>TEOCREDIT</option>
+        <option>TCC - ADAMA</option>
+        <option>TCC - WHITE POINT</option>
+        <option>TCC - ZONA DE NORD</option>
+        <option>AGENT - DAF IMOBILIARE</option>
+        <option>AGENT - BEE IMOBILIARE</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button onclick="adaugaInregistrare()" class="btn btn-success">Adaugă</button>
+    </div>
+  </div>
+  <div class="mb-3">
+    <input type="file" id="csvFile" accept=".csv" class="form-control" />
+    <button onclick="incarcaCSV()" class="btn btn-primary mt-2">Încarcă CSV</button>
+  </div>
+  <button onclick="calculeazaComisioane()" class="btn btn-warning mb-3">Calculează</button>
+  <table class="table table-bordered" id="tabel">
+    <thead>
+    <tr>
+      <th>Nr</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Provider</th><th>Procent</th><th>Comision</th><th>Acțiune</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+    <tr><td colspan="7">Total</td><td id="totalComision"></td><td></td></tr>
+    </tfoot>
+  </table>
+  <p id="rezumat" class="summary"></p>
+</div>
 </body>
 </html>
