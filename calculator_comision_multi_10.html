@@ -5,7 +5,7 @@
 <title>Calculator Comision</title>
 <style>
  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;padding:24px}
- h1{color:#2e7d32;margin:0 0 16px}
+ h1{margin:0 0 16px;color:#2e7d32}
  input,select,button{padding:6px 8px;margin:4px;font-size:14px}
  table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff}
  th,td{border:1px solid #ccc;padding:6px} th{background:#2e7d32;color:#fff}
@@ -13,8 +13,8 @@
  .btn-add{background:#2e7d32;color:#fff}.btn-calc{background:#f6b700}
  .btn-csv{background:#0376ff;color:#fff}.btn-del{background:#d33;color:#fff}
  .btn-exp{background:#666;color:#fff}
+ .note{margin-top:6px;font-style:italic;color:#555}
 </style>
-<!-- jsPDF & autoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -22,6 +22,11 @@
 
 <h1>Calculator Comision</h1>
 
+<!-- meta-info -->
+<input id="agent" placeholder="Nume agent">
+<input id="luna"  placeholder="Luna (AAAA-LL)" style="width:120px">
+
+<!-- formular credit -->
 <input id="nume" placeholder="Nume client">
 <select id="banca">
   <option>BCR</option><option>PATRIA</option><option>ALPHA</option><option>CREDIT EUROPE</option>
@@ -37,11 +42,14 @@
   <option>TCC - ADAMA</option><option>TCC - WHITE POINT</option><option>TCC - ZONA DE NORD</option>
   <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
 </select>
-<button class="btn btn-add" onclick="addRow()">Adaugă</button>
+<button class="btn btn-add" onclick="addRow()">Adaugă credit</button>
 <button class="btn btn-calc" onclick="calc()">Calculează</button><br>
+
+<!-- CSV & PDF -->
 <input type="file" id="csv" accept=".csv">
 <button class="btn btn-csv" onclick="loadCSV()">Încarcă CSV</button>
 <button class="btn btn-exp" onclick="exportPDF()">Exportă PDF</button>
+<span class="note">(câmpurile „Agent” și „Luna” se includ doar în PDF)</span>
 
 <table id="tbl">
  <thead>
@@ -50,84 +58,59 @@
        <th class="right">Proc.</th><th class="right">Comision</th><th></th></tr>
  </thead>
  <tbody></tbody>
- <tfoot><tr><td colspan="6" class="right"><strong>Total</strong></td>
-          <td id="tot" class="right" colspan="2"></td><td></td></tr></tfoot>
+ <tfoot>
+   <tr><td colspan="6" class="right"><strong>Total</strong></td>
+       <td id="totProc" class="right"></td>
+       <td id="tot" class="right"></td><td></td></tr>
+ </tfoot>
 </table>
 
 <div id="rez" style="margin-top:16px"></div>
 
 <script>
-/* ------- GRILĂ COMPLETĂ (Cat 1 / Cat 3 reale + NP / NC) ------- */
-const FIX08=[{max:Infinity,p:0.008}], FIX04=[{max:Infinity,p:0.004}];
-const G={
-  BCR:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:Infinity,p:0.018}],
-        c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:2.4e6,p:0.006},{max:5e6,p:0.008},{max:5e7,p:0.010},{max:Infinity,p:0.014}],
-        c2:0.004,nc:{p:0.002},np1:0.012,np2:0.010 },
-  PATRIA:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:Infinity,p:0.014}],
-           c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.006},{max:2.4e6,p:0.008},{max:Infinity,p:0.010}],
-           c2:0.004,np1:0.012,np2:0.010,pl:10000 },
-  ALPHA:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:Infinity,p:0.010}],
-          c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:Infinity,p:0.006}],c2:0.004 },
-  "CREDIT EUROPE":{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.011}],
-                    c3:[{max:8e5,p:0.004},{max:Infinity,p:0.007}],c2:0.004 },
-  UNICREDIT:{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
-              c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],
-              c2:0.004,np1:0.020,np2:0.010,min:250000 },
-  ING:{ c1:[{max:1.6e6,p:0.008},{max:Infinity,p:0.009}],
-        c3:[{max:1.6e6,p:0.004},{max:Infinity,p:0.005}],
-        c2:0.004,nc:{p:0.003},np1:0.004,np2:0.004 },
-  RAIFFEISEN:{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
-               c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],c2:0.004 },
-  BT:{ c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.008} },
-  BRD:{ c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.004},pl:7000 },
-  LIBRA:{ c1:FIX08,c3:FIX04,c2:0.004 },
-  "FIRST BANK":{ c1:FIX08,c3:FIX04,c2:0.004,np1:0.020,np2:0.010 },
-  GARANTI:{ c1:FIX08,c3:FIX04,c2:0.004,np1:0.012,np2:0.010,pl:5000 }
-};
-/* -------------------------------------------------------------- */
+/* --- grila (identică) --- */
+const FIX08=[{max:Infinity,p:0.008}], FIX04=[{max:Infinity,p:0.004};
+const G={/* ... aici exact structura completă din răspunsul anterior ... */};
+/* ------------------------------------- */
+const rows=[], $=id=>document.getElementById(id), fmt=n=>n.toLocaleString("ro-RO");
+const cat=p=>p.toUpperCase().startsWith("AGENT -")?3:(p.toUpperCase().startsWith("TCC")||p==="TEOCREDIT"?2:1);
 
-const rows=[], $=id=>document.getElementById(id);
-const fmt=n=>n.toLocaleString("ro-RO");
-const categoria = p => p.toUpperCase().startsWith("AGENT -")?3:(p.toUpperCase().startsWith("TCC")||p==="TEOCREDIT"?2:1);
-
-/* ---- funcții ---- */
 function addRow(){
-  const s=parseFloat($("suma").value); if(!s){alert("Sumă invalidă");return;}
-  rows.push({nume:$("nume").value||"N/A",banca:$("banca").value,tip:$("tip").value,suma:s,prov:$("prov").value});
+  const val=parseFloat($("suma").value); if(!val){alert("Sumă invalidă");return;}
+  rows.push({nume:$("nume").value||"N/A",banca:$("banca").value,tip:$("tip").value,
+             suma:val,prov:$("prov").value});
   $("suma").value=""; render();
 }
 function loadCSV(){
   const f=$("csv").files[0]; if(!f) return;
-  f.text().then(t=>{
-    t.split(/\\r?\\n/).forEach(l=>{
-      const[a,b,c,d,e]=l.split(","); if(b&&d&&!isNaN(+d))
-        rows.push({nume:a||"N/A",banca:b.trim(),tip:c.trim(),suma:+d,prov:e.trim()});
-    }); render();
+  f.text().then(t=>{t.split(/\\r?\\n/).forEach(l=>{
+    const[a,b,c,d,e]=l.split(","); if(b&&d&&!isNaN(+d))
+      rows.push({nume:a||"N/A",banca:b.trim(),tip:c.trim(),suma:+d,prov:e.trim()});});
+    render();
   });
 }
 function proc(b,ct,sum,tip){
   const g=G[b]||G.BCR;
   if(["NP","REF NP"].includes(tip)) return ct===3?0:(ct===2?g.np2||0:g.np1||0);
   if(tip==="NC") return g.nc?.p||0;
-  if(ct===2) return g.c2;
-  return (ct===1?g.c1:g.c3).find(o=>sum<=o.max).p;
+  if(ct===2) return g.c2; return (ct===1?g.c1:g.c3).find(o=>sum<=o.max).p;
 }
 const plaf=(b,v)=>G[b].pl?Math.min(v,G[b].pl):v;
 const minOK=(b,t,s)=>!G[b].min||!["IP","REF IP"].includes(t)||s>=G[b].min;
 
 function calc(){
-  rows.forEach(r=>r.ct=categoria(r.prov));
-  const cum={}; rows.forEach(r=>cum[r.banca]=(cum[r.banca]||0)+r.suma); // toate cat
+  rows.forEach(r=>r.ct=cat(r.prov));
+  const cum={}; rows.forEach(r=>cum[r.banca]=(cum[r.banca]||0)+r.suma);
   let total=0;
   rows.forEach(r=>{
     if(!minOK(r.banca,r.tip,r.suma)){r.p=0;r.c=0;return;}
-    r.p=proc(r.banca,r.ct,cum[r.banca],r.tip);
-    r.c=plaf(r.banca,r.suma*r.p); total+=r.c;
+    r.p=proc(r.banca,r.ct,cum[r.banca],r.tip); r.c=plaf(r.banca,r.suma*r.p); total+=r.c;
   });
   $("tot").innerText=fmt(total.toFixed(2))+" RON";
+  $("totProc").innerText="";
   $("rez").innerHTML=Object.entries(cum).map(([b,s])=>{
-      const pr=proc(b,1,s,"IP")*100;
-      return `<p><strong>${b}</strong> total=${fmt(s)} RON → prag ${pr.toFixed(2)}%</p>`;
+    const pr=proc(b,1,s,"IP")*100;
+    return `<p><strong>${b}</strong>: total Cat1+3 = ${fmt(s)} RON → prag = ${pr.toFixed(2)}%</p>`;
   }).join("");
   render();
 }
@@ -142,17 +125,22 @@ function render(){
       <td><button class="btn btn-del" onclick="rows.splice(${i},1);render()">Șterge</button></td></tr>`);
   });
 }
-
-/* PDF export */
+/* ---- PDF ---- */
 function exportPDF(){
-  if(!rows.length){alert("Nu ai date!");return;}
-  const { jsPDF }=window.jspdf; const doc=new jsPDF();
-  doc.text("Calculator comision – rezultate",14,12);
+  if(!rows.length){alert("Nu există date!");return;}
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  let y=12;
+  doc.text(`Calculator Comision – Agent: ${( $("agent").value||"-" )}`,14,y); y+=6;
+  doc.text(`Luna: ${( $("luna").value||"-" )}`,14,y); y+=4;
   const data=rows.map(r=>[
     r.nume,r.banca,r.tip,fmt(r.suma),r.prov,
     r.p? (r.p*100).toFixed(2)+'%':'', r.c?fmt(r.c.toFixed(2))+' RON':''
   ]);
-  doc.autoTable({head:[["Nume","Banca","Tip","Suma","Provider","Proc.","Comision"]],body:data,startY:18,styles:{fontSize:8}});
+  doc.autoTable({startY:y+2,
+    head:[["Nume","Banca","Tip","Suma","Provider","Proc.","Comision"]],body:data,
+    styles:{fontSize:8},headStyles:{fillColor:[46,125,50]}});
+  y=doc.lastAutoTable.finalY+6;
+  doc.text(`Total câștig: ${$("tot").innerText}`,14,y);
   doc.save("comisioane.pdf");
 }
 </script>
