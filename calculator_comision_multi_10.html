@@ -189,7 +189,7 @@ function exportPDF(){
  doc.autoTable({startY:24,head:[["Nume","Banca","Tip","Suma","Provider","Proc.","Comision"]],
                 body:data,styles:{fontSize:8},headStyles:{fillColor:[46,125,50]}});
  const y=doc.lastAutoTable.finalY+6;
- doc.text(`Total câștig: ${$("tot").innerText}`,14,y);
+ doc.text(`Total castig: ${$("tot").innerText}`,14,y);
  doc.save("comisioane.pdf");
 }
 </script>
