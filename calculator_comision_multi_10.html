@@ -14,7 +14,6 @@
  .csv{background:#0376ff;color:#fff}.del{background:#d33;color:#fff}
  .exp{background:#666;color:#fff}.note{font-size:12px;color:#666}
 </style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -45,9 +44,9 @@
 <button class="btn add" onclick="addRow()">Adaugă credit</button>
 <button class="btn calc" onclick="calc()">Calculează</button><br>
 
-<!-- CSV & PDF -->
-<input type="file" id="csv" accept=".csv">
-<button class="btn csv" onclick="loadCSV()">Încarcă CSV</button>
+<!-- CSV (ascuns) + PDF -->
+<input type="file" id="csv" accept=".csv" style="display:none" onchange="loadCSV()">
+<button class="btn csv" onclick="document.getElementById('csv').click()">Încarcă CSV</button>
 <button class="btn exp" onclick="exportPDF()">Exportă PDF</button>
 <span class="note">(Agent & lună apar doar în PDF)</span>
 
@@ -58,125 +57,126 @@
       <th class="right">Proc.</th><th class="right">Comision</th><th></th></tr>
  </thead>
  <tbody></tbody>
- <tfoot>
-  <tr><td colspan="6" class="right"><strong>Total</strong></td>
-      <td id="totProc"></td><td id="tot" class="right"></td><td></td></tr>
- </tfoot>
+ <tfoot><tr>
+   <td colspan="6" class="right"><strong>Total castig</strong></td>
+   <td id="totProc"></td><td id="tot" class="right"></td><td></td>
+ </tr></tfoot>
 </table>
 
 <div id="rez" style="margin-top:16px"></div>
 
 <script>
-/* ======= GRILĂ COMPLETĂ ======= */
-const FIX08=[{max:Infinity,p:0.008}], FIX04=[{max:Infinity,p:0.004}];
+/* ====== GRILĂ COMPLETĂ ====== */
+const FIX08=[{max:Infinity,p:0.008}],
+      FIX04=[{max:Infinity,p:0.004}];
 
 const G={
-  BCR:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:Infinity,p:0.018}],
-        c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:2.4e6,p:0.006},{max:5e6,p:0.008},{max:5e7,p:0.010},{max:Infinity,p:0.014}],
-        c2:0.004,nc:{p:0.002},np1:0.012,np2:0.010 },
-  PATRIA:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:Infinity,p:0.014}],
-           c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.006},{max:2.4e6,p:0.008},{max:Infinity,p:0.010}],
-           c2:0.004,np1:0.012,np2:0.010,pl:10000 },
-  ALPHA:{ c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:Infinity,p:0.010}],
-          c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:Infinity,p:0.006}],c2:0.004 },
-  "CREDIT EUROPE":{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.011}],
-                    c3:[{max:8e5,p:0.004},{max:Infinity,p:0.007}],c2:0.004 },
-  UNICREDIT:{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
-              c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],
-              c2:0.004,np1:0.020,np2:0.010,min:250000 },
-  ING:{ c1:[{max:1.6e6,p:0.008},{max:Infinity,p:0.009}],
-        c3:[{max:1.6e6,p:0.004},{max:Infinity,p:0.005}],
-        c2:0.004,nc:{p:0.003},np1:0.004,np2:0.004 },
-  RAIFFEISEN:{ c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
-               c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],c2:0.004 },
-  BT:{ c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.008} },
-  BRD:{ c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.004},pl:7000 },
-  LIBRA:{ c1:FIX08,c3:FIX04,c2:0.004 },
-  "FIRST BANK":{ c1:FIX08,c3:FIX04,c2:0.004,np1:0.020,np2:0.010 },
-  GARANTI:{ c1:FIX08,c3:FIX04,c2:0.004,np1:0.012,np2:0.010,pl:5000 }
+  BCR:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:2.4e6,p:0.010},{max:5e6,p:0.012},{max:5e7,p:0.014},{max:Infinity,p:0.018}],
+       c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:2.4e6,p:0.006},{max:5e6,p:0.008},{max:5e7,p:0.010},{max:Infinity,p:0.014}],
+       c2:0.004,nc:{p:0.002},np1:0.012,np2:0.010},
+  PATRIA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.010},{max:2.4e6,p:0.012},{max:Infinity,p:0.014}],
+          c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.006},{max:2.4e6,p:0.008},{max:Infinity,p:0.010}],
+          c2:0.004,np1:0.012,np2:0.010,pl:10000},
+  ALPHA:{c1:[{max:8e5,p:0.008},{max:1.6e6,p:0.009},{max:Infinity,p:0.010}],
+         c3:[{max:8e5,p:0.004},{max:1.6e6,p:0.005},{max:Infinity,p:0.006}],c2:0.004},
+  "CREDIT EUROPE":{c1:[{max:8e5,p:0.008},{max:Infinity,p:0.011}],
+                   c3:[{max:8e5,p:0.004},{max:Infinity,p:0.007}],c2:0.004},
+  UNICREDIT:{c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
+             c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],
+             c2:0.004,np1:0.020,np2:0.010,min:250000},
+  ING:{c1:[{max:1.6e6,p:0.008},{max:Infinity,p:0.009}],
+       c3:[{max:1.6e6,p:0.004},{max:Infinity,p:0.005}],
+       c2:0.004,nc:{p:0.003},np1:0.004,np2:0.004},
+  RAIFFEISEN:{c1:[{max:8e5,p:0.008},{max:Infinity,p:0.009}],
+              c3:[{max:8e5,p:0.004},{max:Infinity,p:0.005}],c2:0.004},
+  BT:{c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.008}},
+  BRD:{c1:FIX08,c3:FIX04,c2:0.004,nc:{p:0.004},pl:7000},
+  LIBRA:{c1:FIX08,c3:FIX04,c2:0.004},
+  "FIRST BANK":{c1:FIX08,c3:FIX04,c2:0.004,np1:0.020,np2:0.010},
+  GARANTI:{c1:FIX08,c3:FIX04,c2:0.004,np1:0.012,np2:0.010,pl:5000}
 };
-/* =============================== */
+/* ============================ */
 
 const rows=[], $=id=>document.getElementById(id);
 const fmt=n=>n.toLocaleString("ro-RO");
 const cat=p=>p.toUpperCase().startsWith("AGENT -")?3:(p.toUpperCase().startsWith("TCC")||p==="TEOCREDIT"?2:1);
 
-/* --- adăugare / CSV --- */
+/* ---- adăugare ---- */
 function addRow(){
  const suma=parseFloat($("suma").value);
  if(!suma){alert("Sumă invalidă");return;}
  rows.push({nume:$("nume").value||"N/A",banca:$("banca").value,tip:$("tip").value,suma,prov:$("prov").value});
  $("suma").value=""; render();
 }
+
+/* ---- CSV ---- */
 function loadCSV(){
- const f=$("csv").files[0]; if(!f) return;
- f.text().then(t=>{
-   t.split(/\\r?\\n/).forEach(l=>{
+ const f=$("csv").files[0];
+ if(!f){alert("Selectează fișierul CSV!");return;}
+ if(!f.name.toLowerCase().endsWith(".csv")){alert("Fișierul trebuie să fie .csv");return;}
+ f.text().then(text=>{
+   text.split(/\r?\n/).forEach(l=>{
      const[a,b,c,d,e]=l.split(",");
      if(b&&d&&!isNaN(+d))
        rows.push({nume:a||"N/A",banca:b.trim(),tip:c.trim(),suma:+d,prov:e.trim()});
    });
    render();
- });
+ }).catch(err=>alert("Eroare la citire: "+err));
 }
 
-/* ---------- calcule ---------- */
+/* ---- calcule ---- */
 function proc(b,ct,sum,tip){
  const g=G[b]||G.BCR;
- if(["NP","REF NP"].includes(tip))  return ct===2 ? g.np2||0 : g.np1||0;
- if(tip==="NC")                     return g.nc?.p||0;
- if(ct===2)                         return g.c2;
- const set = ct===1 ? g.c1 : g.c3;
- return set.find(o=>sum<=o.max).p;
+ if(["NP","REF NP"].includes(tip)) return ct===2?g.np2||0:g.np1||0;
+ if(tip==="NC")                    return g.nc?.p||0;
+ if(ct===2)                        return g.c2;
+ const arr=ct===1?g.c1:g.c3;
+ return arr.find(o=>sum<=o.max).p;
 }
 const plaf=(b,v)=>G[b].pl?Math.min(v,G[b].pl):v;
-const minOK=(b,t,s)=>!G[b].min || !["IP","REF IP"].includes(t) || s>=G[b].min;
+const minOK=(b,t,s)=>!G[b].min||!["IP","REF IP"].includes(t)||s>=G[b].min;
 
 function calc(){
  rows.forEach(r=>{
    r.ct=cat(r.prov);
    r.grp=["NP","REF NP"].includes(r.tip)?"B":"A";
  });
- const sumA={}, sumB={};
+ const sumA={},sumB={};
  rows.forEach(r=>{
    (r.grp==="A"?sumA:sumB)[r.banca]=( (r.grp==="A"?sumA:sumB)[r.banca]||0)+r.suma;
  });
-
  let total=0;
  rows.forEach(r=>{
-   const g=G[r.banca]||G.BCR;
-   if(r.grp==="B"){ r.p = r.ct===2 ? g.np2||0 : g.np1||0; }
-   else{
-     if(r.tip==="NC")      r.p=g.nc?.p||0;
-     else if(r.ct===2)     r.p=g.c2;
-     else                  r.p=proc(r.banca,r.ct,sumA[r.banca],r.tip);
-   }
-   if(!minOK(r.banca,r.tip,r.suma)){r.p=0; r.c=0;}
+   if(!minOK(r.banca,r.tip,r.suma)){r.p=0;r.c=0;}
+   else if(r.grp==="B")            r.p=r.ct===2?G[r.banca].np2||0:G[r.banca].np1||0;
+   else if(r.tip==="NC")           r.p=G[r.banca].nc?.p||0;
+   else if(r.ct===2)               r.p=G[r.banca].c2;
+   else                            r.p=proc(r.banca,r.ct,sumA[r.banca],r.tip);
    r.c=plaf(r.banca,r.suma*r.p); total+=r.c;
  });
  $("tot").innerText=fmt(total.toFixed(2))+" RON";
  $("rez").innerHTML=Object.entries(sumA).map(([b,s])=>{
-    const pr=proc(b,1,s,"IP")*100;
-    return `<p><strong>${b}</strong>: total Cat1+3 IP = ${fmt(s)} RON → prag ${pr.toFixed(2)}%</p>`;
+   const pr=proc(b,1,s,"IP")*100;
+   return `<p><strong>${b}</strong>: total IP Cat1+3 = ${fmt(s)} RON → prag ${pr.toFixed(2)}%</p>`;
  }).join("");
  render();
 }
 
-/* ---------- tabel & ștergere ---------- */
+/* ---- tabel ---- */
 function render(){
- const body=$("tbl").querySelector("tbody"); body.innerHTML="";
+ const tbody=$("tbl").querySelector("tbody"); tbody.innerHTML="";
  rows.forEach((r,i)=>{
-   body.insertAdjacentHTML("beforeend",`<tr>
-    <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-    <td class="right">${fmt(r.suma)}</td><td>${r.prov}</td>
-    <td class="right">${r.p?(r.p*100).toFixed(2)+"%":""}</td>
-    <td class="right">${r.c?fmt(r.c.toFixed(2))+" RON":""}</td>
-    <td><button class="btn del" onclick="rows.splice(${i},1);render()">Șterge</button></td>
+   tbody.insertAdjacentHTML("beforeend",`<tr>
+     <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+     <td class="right">${fmt(r.suma)}</td><td>${r.prov}</td>
+     <td class="right">${r.p?(r.p*100).toFixed(2)+'%':''}</td>
+     <td class="right">${r.c?fmt(r.c.toFixed(2))+' RON':''}</td>
+     <td><button class="btn del" onclick="rows.splice(${i},1);render()">Şterge</button></td>
    </tr>`);
  });
 }
 
-/* ---------- PDF ---------- */
+/* ---- PDF ---- */
 function exportPDF(){
  if(!rows.length){alert("Nu există date!");return;}
  const {jsPDF}=window.jspdf; const doc=new jsPDF();
