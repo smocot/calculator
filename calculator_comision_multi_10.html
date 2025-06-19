@@ -178,14 +178,36 @@ function exportPDF(){
 }
 
 function exportXLSX(){
- if(!rows.length){alert('Nu există date!');return}
- const data=rows.map(r=>({
-  Nume:r.nume,Banca:r.banca,Tip:r.tip,Suma:r.suma,
-  Provider:r.prov,Proc:(r.pr*100).toFixed(2)+'%',Comision:+r.com.toFixed(2)
- }));
- const ws=XLSX.utils.json_to_sheet(data);
- const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');
- XLSX.writeFile(wb,'borderou.xlsx');
+  if(!rows.length){alert('Nu există date!');return;}
+
+  /* 1. date brute → sheet */
+  const data = rows.map(r => ({
+     Nume      : r.nume,
+     Banca     : r.banca,
+     Tip       : r.tip,
+     Suma      : r.suma,         // număr – fără puncte
+     Provider  : r.prov,
+     Procente  : (r.pr*100).toFixed(2) + '%',
+     Comision  : +r.com.toFixed(2)
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+
+  /* 2. registru de lucru */
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Borderou');
+
+  /* 3. binar → arrayBuffer → Blob → link „download”  */
+  const ab   = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([ab], {type:
+     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'borderou.xlsx';
+  document.body.appendChild(a);
+  a.click();               // declanşează descărcarea
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url); // curăţăm
 }
 </script>
 </body>
