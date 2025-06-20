@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <title>Calculator Comision</title>
 
-<!-- SheetJS – CDN principal -->
+<!-- SheetJS – CDN primar -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-<!-- Fallback unpkg (se încarcă doar dacă primul e blocat) -->
+<!-- Fallback unpkg -->
 <script src="https://unpkg.com/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 
-<!-- jsPDF (PDF) -->
+<!-- jsPDF + autotable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js"></script>
 
@@ -18,7 +18,8 @@
  h1{margin:0 0 18px;color:#2e7d32}
  input,select,button{padding:6px 8px;margin:3px;font-size:.9rem}
  button{border:0;border-radius:3px;cursor:pointer}
- .green{background:#2e7d32;color:#fff}.yellow{background:#ffc107}.blue{background:#0d6efd;color:#fff}.red{background:#d32f2f;color:#fff}
+ .green{background:#2e7d32;color:#fff}.yellow{background:#ffc107}
+ .blue{background:#0d6efd;color:#fff}.red{background:#d32f2f;color:#fff}
  table{width:100%;border-collapse:collapse;margin-top:18px;background:#fff;font-size:.88rem}
  th,td{border:1px solid #ccc;padding:6px} th{background:#4caf50;color:#fff}
  .right{text-align:right}
@@ -28,26 +29,23 @@
 
 <h1>Calculator Comision</h1>
 
-<!-- agent & lună -->
 <input id="agent" placeholder="Nume agent">
-<input id="luna"  placeholder="Luna (AAAA-LL)">
-<br>
+<input id="luna"  placeholder="Luna (AAAA-LL)"><br>
 
-<!-- formular credit -->
 <input id="nume"  placeholder="Nume client">
 <input id="suma"  placeholder="Suma">
 <select id="banca">
- <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
- <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option>
- <option>RAIFFEISEN</option><option>PATRIA</option><option>LIBRA</option><option>CREDIT EUROPE</option>
+  <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
+  <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option>
+  <option>RAIFFEISEN</option><option>PATRIA</option><option>LIBRA</option><option>CREDIT EUROPE</option>
 </select>
 <select id="tip">
- <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option>
+  <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option>
 </select>
 <select id="prov">
- <option>RECOMANDARI</option><option>TEOCREDIT</option><option>TEO CREDIT</option>
- <option>TCC - ADAMA</option><option>TCC - WHITE POINT</option>
- <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
+  <option>RECOMANDARI</option><option>TEOCREDIT</option><option>TEO CREDIT</option>
+  <option>TCC - ADAMA</option><option>TCC - WHITE POINT</option>
+  <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
 </select>
 <button class="green" onclick="addRow()">Adaugă credit</button>
 <button class="yellow" onclick="calc()">Calculează</button><br>
@@ -68,94 +66,94 @@
 <div id="rez" style="margin-top:14px;font-size:.9rem"></div>
 
 <script>
-/* --- grile (identic variantele anterioare) --- */
-const GRILA_IP={BCR:[[0,.008],[800001,.009],[1600001,.01],[2400001,.012],[5000001,.014],[50000001,.018]],
-PATRIA:[[0,.008],[800001,.01],[1600001,.012],[2400001,.014]],
-ALPHA:[[0,.008],[800001,.009],[1600001,.01]],
+/* ------- grile (identic versiunile anterioare) ------- */
+const GRILA_IP={BCR:[[0,.008],[800001,.009],[1600001,.010],[2400001,.012],[5000001,.014],[50000001,.018]],
+PATRIA:[[0,.008],[800001,.010],[1600001,.012],[2400001,.014]],
+ALPHA:[[0,.008],[800001,.009],[1600001,.010]],
 ING:[[0,.008],[1600001,.009]],
 UNICREDIT:[[0,.008],[800001,.009]],
 RAIFFEISEN:[[0,.008],[800001,.009]],
 "CREDIT EUROPE":[[0,.008],[800001,.011]],
 BT:[[0,.008]],BRD:[[0,.008]],GARANTI:[[0,.008]],"FIRST BANK":[[0,.008]],LIBRA:[[0,.008]]};
+
 const NP_CAT1={PATRIA:1.20,UNICREDIT:2,"FIRST BANK":2,GARANTI:1.20,ING:.40};
 const NP_CAT2={PATRIA:1,UNICREDIT:1,"FIRST BANK":1,GARANTI:1,ING:.40};
 const CAT2_IP_PROC=.004;
 
-/* --- utilitare --- */
+/* ------- utilitare ------- */
 const rows=[];const $=id=>document.getElementById(id);
 const cleanNum=x=>parseFloat(x.replace(/[ .]/g,'').replace(',','.'))||0;
 const fmt=n=>n.toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2});
 const cat=p=>/^AGENT/.test(p)?3:(/^TCC/.test(p)||/^TEO ?CREDIT$/.test(p))?2:1;
 
-/* --- procente --- */
-function procIP(b,s,c){let p=(GRILA_IP[b]||[[0,.008]])[0][1];
-(GRILA_IP[b]||[]).forEach(([m,val])=>{if(s>=m)p=val});return c===3?p/2:p;}
-const procNP=(b,c)=>c===3?0:(c===2?(NP_CAT2[b]||0):(NP_CAT1[b]||0));
+/* ------- procente ------- */
+function procIP(b,s,c){let pct=(GRILA_IP[b]||[[0,.008]])[0][1];
+(GRILA_IP[b]||[]).forEach(([m,p])=>{if(s>=m)pct=p});return c===3?pct/2:pct;}
+function procNP(b,c){return c===3?0:(c===2?(NP_CAT2[b]||0):(NP_CAT1[b]||0));}
 
-/* --- adăugare / ștergere --- */
+/* ------- add / CSV -------- */
 function addRow(){
- const suma=cleanNum($('suma').value);if(!suma){alert('Sumă?');return;}
- rows.push({nume:$('nume').value||'N/A',banca:$('banca').value,
-            tip:$('tip').value.toUpperCase(),suma,prov:$('prov').value.toUpperCase()});
- $('nume').value='';$('suma').value='';render();calc();
+  const suma=cleanNum($('suma').value); if(!suma){alert('Sumă?');return;}
+  rows.push({nume:$('nume').value||'N/A',banca:$('banca').value,
+             tip:$('tip').value.toUpperCase(),suma,prov:$('prov').value.toUpperCase()});
+  $('nume').value='';$('suma').value=''; calc();   /* NU mai apelăm render() separat */
 }
-function delRow(i){rows.splice(i,1);render();calc();}
 function loadCSV(){
- const f=$('csv').files[0];if(!f)return;
- f.text().then(t=>{
-  t.trim().split(/\r?\n/).forEach(l=>{
-   const[a,b,c,d,e]=l.split(',');const s=cleanNum(d||'0');if(!b||!s)return;
-   rows.push({nume:a||'N/A',banca:b.trim().toUpperCase(),
-              tip:(c||'IP').trim().toUpperCase(),
-              suma:s,prov:(e||'RECOMANDARI').trim().toUpperCase()});
-  });render();calc();
- });
+  const f=$('csv').files[0]; if(!f)return;
+  f.text().then(t=>{
+    t.trim().split(/\r?\n/).forEach(l=>{
+      const [a,b,c,d,e]=l.split(','); const s=cleanNum(d||'0'); if(!b||!s)return;
+      rows.push({nume:a||'N/A',banca:b.trim().toUpperCase(),
+                 tip:(c||'IP').trim().toUpperCase(),
+                 suma:s,prov:(e||'RECOMANDARI').trim().toUpperCase()});
+    });
+    calc();
+  });
 }
 
-/* --- calcule --- */
+/* ------- calcule & render ------- */
 function calc(){
- const sumIP={};
- rows.forEach(r=>{if(r.tip.includes('IP')&&cat(r.prov)!==2)sumIP[r.banca]=(sumIP[r.banca]||0)+r.suma;});
- let total=0;
- rows.forEach(r=>{
-  const c=cat(r.prov);
-  r.pr=r.tip.includes('NP')?procNP(r.banca,c):c===2?CAT2_IP_PROC:procIP(r.banca,sumIP[r.banca]||0,c);
-  r.com=r.suma*r.pr;total+=r.com;
- });
- render(total);
- $('rez').innerHTML=Object.entries(sumIP).map(([b,s])=>`<strong>${b}</strong>: total Cat1+3 = ${s.toLocaleString()} RON → prag ${(procIP(b,s,1)*100).toFixed(2)}%`).join('<br>');
+  const ipSum={}; rows.forEach(r=>{if(r.tip.includes('IP')&&cat(r.prov)!==2)ipSum[r.banca]=(ipSum[r.banca]||0)+r.suma;});
+  let total=0; rows.forEach(r=>{
+    const c=cat(r.prov);
+    r.pr=r.tip.includes('NP')?procNP(r.banca,c):c===2?CAT2_IP_PROC:procIP(r.banca,ipSum[r.banca]||0,c);
+    r.com=r.suma*r.pr; total+=r.com;
+  });
+  render(total);
+  $('rez').innerHTML=Object.entries(ipSum).map(([b,s])=>
+    `<strong>${b}</strong>: total Cat1+3 = ${s.toLocaleString()} RON → prag ${(procIP(b,s,1)*100).toFixed(2)}%`
+  ).join('<br>');
+}
+function render(tot=0){
+  const tb=$('tbl').tBodies[0]; tb.innerHTML='';
+  rows.forEach((r,i)=>tb.insertAdjacentHTML('beforeend',`<tr>
+    <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+    <td class=right>${fmt(r.suma)}</td><td>${r.prov}</td>
+    <td class=right>${(r.pr*100).toFixed(2)}%</td><td class=right>${fmt(r.com)}</td>
+    <td><button class="red" onclick="delRow(${i})">x</button></td></tr>`));
+  $('tot').textContent=fmt(tot);
 }
 
-function render(t=0){
- const tb=$('tbl').tBodies[0];tb.innerHTML='';
- rows.forEach((r,i)=>tb.insertAdjacentHTML('beforeend',`<tr>
-  <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-  <td class=right>${fmt(r.suma)}</td><td>${r.prov}</td>
-  <td class=right>${(r.pr*100).toFixed(2)}%</td><td class=right>${fmt(r.com)}</td>
-  <td><button class="red" onclick="delRow(${i})">x</button></td></tr>`));
- $('tot').textContent=fmt(t);
-}
-
-/* --- Export XLSX --- */
+/* ------- export XLSX ------- */
 function exportXLSX(){
- if(typeof XLSX==='undefined'){alert('SheetJS nu s-a încărcat – verifică CDN!');return;}
- if(!rows.length){alert('Nu există date!');return;}
- const header=[['Agent',$('agent').value||'-'],['Luna',$('luna').value||'-'],[]];
- const body=rows.map(r=>[r.nume,r.banca,r.tip,r.suma,r.prov,(r.pr*100).toFixed(2)+'%',+r.com.toFixed(2)]);
- body.push([],['','','Total_castig', $('tot').textContent.replace(/[^\d.,]/g,'')]);
- const ws=XLSX.utils.aoa_to_sheet([ ...header, ['Nume','Banca','Tip','Suma','Provider','Proc','Comision'], ...body ]);
- const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');
- XLSX.writeFile(wb,'borderou.xlsx');
+  if(typeof XLSX==='undefined'){alert('SheetJS nu s-a încărcat – rulează offline sau CDN blocat');return;}
+  if(!rows.length){alert('Nu există date!');return;}
+  const header=[['Agent',$('agent').value||'-'],['Luna',$('luna').value||'-'],[]];
+  const body = rows.map(r=>[r.nume,r.banca,r.tip,r.suma,r.prov,(r.pr*100).toFixed(2)+'%',+r.com.toFixed(2)]);
+  body.push([],['','','Total_castig', $('tot').textContent.replace(/[^\d.,]/g,'')]);
+  const ws=XLSX.utils.aoa_to_sheet([ ...header, ['Nume','Banca','Tip','Suma','Provider','Proc','Comision'], ...body ]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');
+  XLSX.writeFile(wb,'borderou.xlsx');
 }
 
-/* --- Export PDF --- */
-function exportPDF(){
- if(!rows.length){alert('Nu există date!');return;}
+/* ------- export PDF ------- */
+function exportPDF(){ if(!rows.length){alert('Nu există date!');return;}
  const {jsPDF}=window.jspdf;const doc=new jsPDF();
- doc.setFontSize(12);doc.text(`Agent: ${$('agent').value||'-'} • Luna: ${$('luna').value||'-'}`,14,16);
- doc.autoTable({head:[['Nume','Banca','Tip','Suma','Provider','Proc','Comision']],
-  body:rows.map(r=>[r.nume,r.banca,r.tip,fmt(r.suma),r.prov,(r.pr*100).toFixed(2)+'%',fmt(r.com)]),
-  startY:24,styles:{fontSize:8}});
+ doc.setFontSize(12); doc.text(`Agent: ${$('agent').value||'-'} • Luna: ${$('luna').value||'-'}`,14,16);
+ doc.autoTable({
+   head:[['Nume','Banca','Tip','Suma','Provider','Proc','Comision']],
+   body:rows.map(r=>[r.nume,r.banca,r.tip,fmt(r.suma),r.prov,(r.pr*100).toFixed(2)+'%',fmt(r.com)]),
+   startY:24,styles:{fontSize:8}});
  doc.text(`Total castig: ${$('tot').textContent}`,14,doc.lastAutoTable.finalY+10);
  doc.save('borderou.pdf');
 }
