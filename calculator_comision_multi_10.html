@@ -1,213 +1,156 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-<meta charset="utf-8">
+<!DOCTYPE html><html lang="ro"><head><meta charset="utf-8">
 <title>Calculator Comision</title>
-
-<!-- SheetJS (dacă reţeaua o permite) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<style>
+ body{font-family:sans-serif;background:#f6f8fa;padding:18px}
+ h1{margin:0 0 12px;color:#2e7d32}
+ input,select,button{padding:6px 8px;margin:3px;font-size:.88rem}
+ table{width:100%;border-collapse:collapse;margin-top:14px;background:#fff;font-size:.85rem}
+ th,td{border:1px solid #ccc;padding:6px} th{background:#4caf50;color:#fff}
+ .right{text-align:right} button{border:0;border-radius:3px;cursor:pointer}
+ .g{background:#2e7d32;color:#fff}.y{background:#ffc107}.b{background:#0d6efd;color:#fff}.r{background:#d32f2f;color:#fff}
+</style>
+<!-- SheetJS pentru XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-
-<!-- jsPDF + autotable (pentru PDF) -->
+<!-- jsPDF pentru PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js"></script>
-
-<style>
- body{font-family:sans-serif;background:#f5f7f9;padding:24px}
- h1{margin:0 0 18px;color:#2e7d32}
- input,select,button{padding:6px 8px;margin:3px;font-size:.9rem}
- button{border:0;border-radius:3px;cursor:pointer}
- .green{background:#2e7d32;color:#fff}.yellow{background:#ffc107}
- .blue{background:#0d6efd;color:#fff}.red{background:#d32f2f;color:#fff}
- table{width:100%;border-collapse:collapse;margin-top:18px;background:#fff;font-size:.88rem}
- th,td{border:1px solid #ccc;padding:6px} th{background:#4caf50;color:#fff}
- .right{text-align:right}
-</style>
-</head>
-<body>
+</head><body>
 
 <h1>Calculator Comision</h1>
 
-<!-- Agent & lună -->
 <input id="agent" placeholder="Nume agent">
 <input id="luna"  placeholder="Luna (AAAA-LL)"><br>
 
-<!-- Formular credit -->
-<input id="nume"  placeholder="Nume client">
-<input id="suma"  placeholder="Suma">
+<input id="nume" placeholder="Nume client">
+<input id="suma" placeholder="Suma">
 <select id="banca">
-  <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
-  <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option>
-  <option>RAIFFEISEN</option><option>PATRIA</option><option>LIBRA</option><option>CREDIT EUROPE</option>
+ <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
+ <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option>
+ <option>RAIFFEISEN</option><option>PATRIA</option><option>LIBRA</option><option>CREDIT EUROPE</option>
 </select>
-<select id="tip">
-  <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option>
-</select>
+<select id="tip"><option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option></select>
 <select id="prov">
-  <option>RECOMANDARI</option><option>TEOCREDIT</option><option>TEO CREDIT</option>
-  <option>TCC - ADAMA</option><option>TCC - WHITE POINT</option>
-  <option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
+ <option>RECOMANDARI</option><option>TEOCREDIT</option><option>TCC - ADAMA</option>
+ <option>TCC - WHITE POINT</option><option>AGENT - DAF IMOBILIARE</option><option>AGENT - BEE IMOBILIARE</option>
 </select>
-<button class="green" onclick="addRow()">Adaugă credit</button>
-<button class="yellow" onclick="calc()">Calculează</button><br>
+<button class="g" onclick="addRow()">Adaugă credit</button>
+<button class="y" onclick="calc()">Calculează</button><br>
 
-<!-- CSV / Export -->
 <input type="file" id="csv" accept=".csv">
-<button class="blue"  onclick="loadCSV()">Încarcă CSV</button>
-<button class="yellow" onclick="exportPDF()">Exportă PDF</button>
-<button class="green"  onclick="exportXLSX()">Exportă XLSX</button>
-<button class="green"  onclick="exportCSV()">Exportă CSV</button>
-<button class="green"  onclick="exportHTMLxls()">Exportă XLS (HTML)</button>
+<button class="b" onclick="loadCSV()">Încarcă CSV</button>
+<button class="y" onclick="exportPDF()">Exportă PDF</button>
+<button class="g" onclick="exportXLSX()">Exportă XLSX</button>
+<button class="g" onclick="exportCSV()">Exportă CSV</button>
+<button class="g" onclick="exportHTMLxls()">Exportă XLS (HTML)</button>
 
-<table id="tbl">
- <thead><tr>
-  <th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th>
-  <th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr></thead>
+<table id="tbl"><thead><tr>
+ <th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th>
+ <th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr></thead>
  <tbody></tbody>
- <tfoot><tr><td colspan="7" class="right"><strong>Total castig</strong></td><td id="tot">0</td><td></td></tr></tfoot>
+ <tfoot><tr><td colspan="7" class="right"><b>Total castig</b></td><td id="tot">0</td><td></td></tr></tfoot>
 </table>
-
-<div id="rez" style="margin-top:14px;font-size:.9rem"></div>
+<div id="rez" style="margin-top:12px;font-size:.85rem"></div>
 
 <script>
-/* --------- GRILE (praguri) --------- */
-const GRILA_IP={BCR:[[0,.008],[800001,.009],[1600001,.010],[2400001,.012],[5000001,.014],[50000001,.018]],
+const GRILA_IP={BCR:[[0,.008],[800001,.009],[1600001,.010],[2400001,.012],[5000001,.014],[5e7,.018]],
 PATRIA:[[0,.008],[800001,.010],[1600001,.012],[2400001,.014]],
 ALPHA:[[0,.008],[800001,.009],[1600001,.010]],
-ING:[[0,.008],[1600001,.009]],
-UNICREDIT:[[0,.008],[800001,.009]],
-RAIFFEISEN:[[0,.008],[800001,.009]],
-"CREDIT EUROPE":[[0,.008],[800001,.011]],
+ING:[[0,.008],[1600001,.009]],UNICREDIT:[[0,.008],[800001,.009]],
+RAIFFEISEN:[[0,.008],[800001,.009]],"CREDIT EUROPE":[[0,.008],[800001,.011]],
 BT:[[0,.008]],BRD:[[0,.008]],GARANTI:[[0,.008]],"FIRST BANK":[[0,.008]],LIBRA:[[0,.008]]};
 
-const NP_CAT1={PATRIA:1.20,UNICREDIT:2,"FIRST BANK":2,GARANTI:1.20,ING:.40};
-const NP_CAT2={PATRIA:1,UNICREDIT:1,"FIRST BANK":1,GARANTI:1,ING:.40};
-const CAT2_IP_PROC=.004;
+const NP_CAT1={PATRIA:1.2,UNICREDIT:2,"FIRST BANK":2,GARANTI:1.2,ING:.4};
+const NP_CAT2={PATRIA:1,UNICREDIT:1,"FIRST BANK":1,GARANTI:1,ING:.4};
+const CAT2_IP=.004;
 
-/* --------- utilitare --------- */
 const rows=[]; const $=id=>document.getElementById(id);
-const cleanNum=x=>parseFloat(x.replace(/[ .]/g,'').replace(',','.'))||0;
+const num=(s)=>parseFloat((s||'').replace(/[ .]/g,'').replace(',','.'))||0;
 const fmt=n=>n.toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2});
-const cat=p=>/^AGENT/.test(p)?3:(/^TCC/.test(p)||/^TEO ?CREDIT$/.test(p))?2:1;
+const cat=p=>/^AGENT/.test(p)?3:(/^TCC|TEOCREDIT/.test(p)?2:1);
 
-/* --------- procente --------- */
-function procIP(bank,sum,c){
-  let pct=(GRILA_IP[bank]||[[0,.008]])[0][1];
-  (GRILA_IP[bank]||[]).forEach(([m,p])=>{if(sum>=m)pct=p});
-  return c===3? pct/2 : pct;
-}
-function procNP(bank,c){return c===3?0:(c===2?(NP_CAT2[bank]||0):(NP_CAT1[bank]||0));}
+function procIP(b,s,c){let p=(GRILA_IP[b]||[[0,.008]])[0][1];
+(GRILA_IP[b]||[]).forEach(([m,x])=>{if(s>=m)p=x});return c===3?p/2:p}
+function procNP(b,c){return c===3?0:(c===2?(NP_CAT2[b]||0):(NP_CAT1[b]||0))}
 
-/* --------- CRUD --------- */
 function addRow(){
-  const suma=cleanNum($('suma').value); if(!suma){alert('Sumă?');return;}
+  const s=num($('suma').value); if(!s)return alert('Sumă?');
   rows.push({nume:$('nume').value||'N/A',banca:$('banca').value,
-             tip:$('tip').value.toUpperCase(),suma,prov:$('prov').value.toUpperCase()});
+             tip:$('tip').value.toUpperCase(),suma:s,prov:$('prov').value.toUpperCase()});
   $('nume').value='';$('suma').value=''; calc();
 }
 function delRow(i){rows.splice(i,1);calc();}
+
 function loadCSV(){
-  const f=$('csv').files[0]; if(!f)return;
-  f.text().then(t=>{
-    t.trim().split(/\r?\n/).forEach(l=>{
-      const [a,b,c,d,e]=l.split(','); const s=cleanNum(d||'0'); if(!b||!s)return;
+  const f=$('csv').files[0]; if(!f)return; f.text().then(t=>{
+    t.split(/\r?\n/).forEach(l=>{
+      const[a,b,c,d,e]=l.split(','); const s=num(d); if(!b||!s)return;
       rows.push({nume:a||'N/A',banca:b.trim().toUpperCase(),
                  tip:(c||'IP').trim().toUpperCase(),suma:s,
                  prov:(e||'RECOMANDARI').trim().toUpperCase()});
-    });
-    calc();
+    }); calc();
   });
 }
 
-/* --------- calc & render --------- */
 function calc(){
-  const ipSum={};
-  rows.forEach(r=>{if(r.tip.includes('IP')&&cat(r.prov)!==2)ipSum[r.banca]=(ipSum[r.banca]||0)+r.suma;});
-  let total=0;
+  const sumIP={}; rows.forEach(r=>{if(r.tip.includes('IP')&&cat(r.prov)!==2)sumIP[r.banca]=(sumIP[r.banca]||0)+r.suma});
+  let tot=0;
   rows.forEach(r=>{
     const c=cat(r.prov);
-    r.pr=r.tip.includes('NP') ? procNP(r.banca,c)
-        : (c===2?CAT2_IP_PROC:procIP(r.banca,ipSum[r.banca]||0,c));
-    r.com=r.suma*r.pr; total+=r.com;
-  });
-  render(total);
-  $('rez').innerHTML=Object.entries(ipSum).map(([b,s])=>
-    `<strong>${b}</strong>: total Cat1+3 = ${s.toLocaleString()} RON → prag ${(procIP(b,s,1)*100).toFixed(2)}%`
-  ).join('<br>');
-}
-function render(tot=0){
-  const tb=$('tbl').tBodies[0]; tb.innerHTML='';
-  rows.forEach((r,i)=>tb.insertAdjacentHTML('beforeend',`<tr>
-    <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-    <td class=right>${fmt(r.suma)}</td><td>${r.prov}</td>
-    <td class=right>${(r.pr*100).toFixed(2)}%</td><td class=right>${fmt(r.com)}</td>
-    <td><button class="red" onclick="delRow(${i})">x</button></td></tr>`));
-  $('tot').textContent=fmt(tot);
+    r.pr=r.tip.includes('NP')?procNP(r.banca,c):(c===2?CAT2_IP:procIP(r.banca,sumIP[r.banca]||0,c));
+    r.com=r.suma*r.pr; tot+=r.com;
+  }); render(tot);
+  $('rez').innerHTML=Object.entries(sumIP).map(([b,s])=>`<b>${b}</b>: total Cat1+3 = ${s.toLocaleString()} RON → prag ${(procIP(b,s,1)*100).toFixed(2)}%`).join('<br>');
 }
 
-/* --------- Export XLSX --------- */
-function exportXLSX(){
-  if(typeof XLSX==='undefined'){alert('SheetJS nu s-a încărcat – foloseşte CSV/XLS(HTML)');return;}
-  if(!rows.length){alert('Nu există date!');return;}
-  const header=[['Agent',$('agent').value||'-'],['Luna',$('luna').value||'-'],[]];
-  const body=rows.map(r=>[r.nume,r.banca,r.tip,r.suma,r.prov,(r.pr*100).toFixed(2)+'%',+r.com.toFixed(2)]);
-  body.push([],['','','Total_castig', $('tot').textContent.replace(/[^\d.,]/g,'')]);
-  const ws=XLSX.utils.aoa_to_sheet([ ...header,['Nume','Banca','Tip','Suma','Provider','Proc','Comision'],...body ]);
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');
-  XLSX.writeFile(wb,'borderou.xlsx');
+function render(t){
+ const tb=$('tbl').tBodies[0]; tb.innerHTML='';
+ rows.forEach((r,i)=>tb.insertAdjacentHTML('beforeend',`<tr>
+ <td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+ <td class=right>${fmt(r.suma)}</td><td>${r.prov}</td>
+ <td class=right>${(r.pr*100).toFixed(2)}%</td><td class=right>${fmt(r.com)}</td>
+ <td><button class="r" onclick="delRow(${i})">x</button></td></tr>`));
+ $('tot').textContent=fmt(t);
 }
 
-/* --------- Export CSV --------- */
+/* ---- Exporturi ---- */
 function exportCSV(){
-  if(!rows.length){alert('Nu există date!');return;}
-  const lines=[
-    `Agent,${$('agent').value||'-'}`,
-    `Luna,${$('luna').value||'-'}`,
-    '',
-    'Nume,Banca,Tip,Suma,Provider,Proc,Comision'
-  ];
-  rows.forEach(r=>lines.push([
-    `"${r.nume}"`,r.banca,r.tip,r.suma,`"${r.prov}"`,
-    (r.pr*100).toFixed(2)+'%',r.com.toFixed(2)
-  ].join(',')));
-  lines.push(''); lines.push(`,,Total_castig,${$('tot').textContent.replace(/[^\d.,]/g,'')}`);
-  downloadBlob(lines.join('\r\n'),'borderou.csv','text/csv;charset=utf-8');
+ if(!rows.length)return alert('Nu există date!');
+ const list=[`Agent,${$('agent').value||'-'}`,`Luna,${$('luna').value||'-'}`,'',
+ 'Nume,Banca,Tip,Suma,Provider,Proc,Comision'];
+ rows.forEach(r=>list.push([`"${r.nume}"`,r.banca,r.tip,r.suma,r.prov,(r.pr*100).toFixed(2)+'%',r.com.toFixed(2)].join(',')));
+ list.push('',`,,Total_castig,${$('tot').textContent.replace(/[^\d.,]/g,'').replace(',','.')}`);
+ download(new Blob([list.join('\r\n')],{type:'text/csv;charset=utf-8'}),'borderou.csv');
 }
-
-/* --------- Export XLS bazat pe HTML --------- */
 function exportHTMLxls(){
-  if(!rows.length){alert('Nu există date!');return;}
-  const rowsHtml=rows.map(r=>`<tr><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-    <td>${r.suma}</td><td>${r.prov}</td><td>${(r.pr*100).toFixed(2)}%</td><td>${r.com.toFixed(2)}</td></tr>`).join('');
-  const html=`<html><head><meta charset="utf-8"></head><body>
-    <table border="1"><tr><td>Agent</td><td>${$('agent').value||'-'}</td></tr>
-                    <tr><td>Luna</td><td>${$('luna').value||'-'}</td></tr></table><br>
-    <table border="1">
-      <tr><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th>
-          <th>Provider</th><th>Proc</th><th>Comision</th></tr>
-      ${rowsHtml}
-      <tr><td colspan="6"><b>Total_castig</b></td><td>${$('tot').textContent.replace(/[^\d.,]/g,'')}</td></tr>
-    </table></body></html>`;
-  downloadBlob(html,'borderou.xls','application/vnd.ms-excel');
+ if(!rows.length)return alert('Nu există date!');
+ const lines=rows.map(r=>`<tr><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td><td>${r.suma}</td><td>${r.prov}</td><td>${(r.pr*100).toFixed(2)}%</td><td>${r.com.toFixed(2)}</td></tr>`).join('');
+ const html=`<html><meta charset=utf-8><body>
+ <table border=1><tr><td>Agent</td><td>${$('agent').value||'-'}</td></tr><tr><td>Luna</td><td>${$('luna').value||'-'}</td></tr></table><br>
+ <table border=1><tr><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Provider</th><th>Proc</th><th>Comision</th></tr>
+ ${lines}<tr><td colspan=6><b>Total_castig</b></td><td>${$('tot').textContent.replace(/[^\d.,]/g,'').replace(',','.')}</td></tr></table></body></html>`;
+ download(new Blob([html],{type:'application/vnd.ms-excel'}),'borderou.xls');
 }
-
-/* --------- Export PDF --------- */
-function exportPDF(){ if(!rows.length){alert('Nu există date!');return;}
-  const {jsPDF}=window.jspdf;const doc=new jsPDF();
-  doc.text(`Agent: ${$('agent').value||'-'} • Luna: ${$('luna').value||'-'}`,14,16);
-  doc.autoTable({head:[['Nume','Banca','Tip','Suma','Provider','Proc','Comision']],
-     body:rows.map(r=>[r.nume,r.banca,r.tip,fmt(r.suma),r.prov,(r.pr*100).toFixed(2)+'%',fmt(r.com)]),
-     startY:24,styles:{fontSize:8}});
-  doc.text(`Total castig: ${$('tot').textContent}`,14,doc.lastAutoTable.finalY+10);
-  doc.save('borderou.pdf');
+function exportXLSX(){
+ if(typeof XLSX==='undefined')return alert('SheetJS nu s-a încărcat – foloseşte CSV/XLS.');
+ if(!rows.length)return alert('Nu există date!');
+ const ws=XLSX.utils.aoa_to_sheet([
+  ['Agent',$('agent').value||'-'],['Luna',$('luna').value||'-'],[],
+  ['Nume','Banca','Tip','Suma','Provider','Proc','Comision'],
+  ...rows.map(r=>[r.nume,r.banca,r.tip,r.suma,r.prov,(r.pr*100).toFixed(2)+'%',+r.com.toFixed(2)]),
+  [],['','', 'Total_castig', $('tot').textContent.replace(/[^\d.,]/g,'').replace(',','.')]
+ ]);
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');XLSX.writeFile(wb,'borderou.xlsx');
 }
-
-/* --------- helper download --------- */
-function downloadBlob(content,filename,mime){
-  const blob=new Blob([content],{type:mime}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=filename;
-  document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); document.body.removeChild(a);
+function exportPDF(){
+ if(!rows.length)return alert('Nu există date!');
+ const {jsPDF}=window.jspdf;const doc=new jsPDF();
+ doc.text(`Agent: ${$('agent').value||'-'}  •  Luna: ${$('luna').value||'-'}`,14,16);
+ doc.autoTable({head:[['Nume','Banca','Tip','Suma','Provider','Proc','Comision']],
+  body:rows.map(r=>[r.nume,r.banca,r.tip,fmt(r.suma),r.prov,(r.pr*100).toFixed(2)+'%',fmt(r.com)]),
+  startY:22,styles:{fontSize:8}});
+ doc.text(`Total castig: ${$('tot').textContent}`,14,doc.lastAutoTable.finalY+10); doc.save('borderou.pdf');
 }
+function download(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
 </script>
-</body>
-</html>
+</body></html>
