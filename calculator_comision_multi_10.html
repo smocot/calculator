@@ -1,203 +1,161 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-<meta charset="utf-8">
-<title>Calculator Comision</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html lang="ro"><head><meta charset="utf-8">
+<title>Calculator Comision</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js" rel="preload" as="script">
 <style>
- body{font:14px/1.3 Roboto,Arial,sans-serif;margin:6px}
- input,select,button{font:inherit;padding:3px 6px;margin:2px}
+ body{font:14px/1.35 Roboto,Arial,sans-serif;margin:6px}
+ input,select,button{font:inherit;margin:2px;padding:3px 6px}
  table{width:100%;border-collapse:collapse;margin-top:4px}
- th,td{border:1px solid #3a863a;padding:3px 5px}
- th{background:#3a863a;color:#fff;text-align:left;font-weight:600}
- tfoot td{font-weight:700}
- .del{background:#c62828;color:#fff;border:0;padding:1px 6px;cursor:pointer}
+ th,td{border:1px solid #388e3c;padding:4px 6px}
+ th{background:#388e3c;color:#fff;font-weight:600}
  .green{background:#2e7d32;color:#fff;border:0}
  .amber{background:#f9a825;color:#000;border:0}
-</style>
-<!--  SheetJS CDN  -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-</head>
-<body>
+ .del{background:#c62828;color:#fff;border:0;padding:2px 7px;cursor:pointer}
+</style></head><body>
 
-<!--  FORM   -->
-Nume agent <input id="agent"     placeholder="Agent">
+Nume agent <input id="agent" placeholder="Agent">
 Luna (AAAA-LL) <input id="luna"  placeholder="2025-06">
-
-Nume client <input id="numeClient"  placeholder="Nume">
-Suma <input id="suma"  style="width:80px">
-
+Nume client <input id="nume"  placeholder="Nume">
+Suma <input id="suma" style="width:80px">
 <select id="banca">
  <option>BCR</option><option>BRD</option><option>ING</option><option>UNICREDIT</option>
  <option>GARANTI</option><option>FIRST BANK</option><option>ALPHA</option>
  <option>PATRIA</option><option>RAIFFEISEN</option>
 </select>
-
-<select id="tip">
- <option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option>
-</select>
-
+<select id="tip"><option>IP</option><option>REF IP</option><option>NP</option><option>REF NP</option></select>
 <select id="prov">
- <option>RECOMANDARI</option>
- <option>TEOCREDIT</option>
- <option>TCC - ADAMA</option>
- <option>AGENT - DAF IMOBILIARE</option>
+ <option>RECOMANDARI</option><option>TEOCREDIT</option>
+ <option>TCC - ADAMA</option><option>AGENT - DAF IMOBILIARE</option>
 </select>
-
 <button class="green" onclick="addRow()">Adaugă credit</button>
 <button class="amber" onclick="calculate()">Calculează</button><br>
 
-<!--  CSV  -->
 <input type="file" id="csv" accept=".csv">
 <button onclick="loadCSV()">Încarcă CSV</button>
-<!-- export -->
 <button onclick="exportCSV()">Exportă CSV</button>
 <button onclick="exportXLSX()">Exportă XLSX</button>
 
-<!--  TABEL   -->
-<table id="t">
-<thead>
-<tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr>
-</thead><tbody></tbody>
-<tfoot><tr><td colspan="7" align="right">Total castig</td><td id="tot"></td><td></td></tr></tfoot>
+<table id="tbl">
+ <thead><tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th><th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr></thead>
+ <tbody></tbody>
+ <tfoot><tr><td colspan="7" align="right">Total castig</td><td id="tot"></td><td></td></tr></tfoot>
 </table>
+<pre id="rez" style="font:12px monospace;margin-top:4px"></pre>
 
-<!--  REZUMAT   -->
-<div id="rez" style="white-space:pre;font:12px monospace;margin-top:4px"></div>
-
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
 const rows=[];
 
-/* --- GRILE  ---------------------------------------------------------------*/
-const percNP = {               /* Cat-1 / Cat-3 (aceeaşi), Cat-2=1 % */
-  'PATRIA':1.2,'UNICREDIT':2,'FIRST BANK':2,'GARANTI':1.2,'ING':0.4
-};                              // restul băncilor nu plătesc NP
-
-const cat2Fixed = {IP:0.4, NP:1};
-
-const praguriIP = {            // doar Cat-1.  valorile >2,4M am pus 1,2 %
-  BCR:[ [0,0.8],[0.8,0.9],[1.6,1],[2.4,1.2] ],
-  ALPHA:[[0,0.8],[0.8,0.9],[1.6,1]],
-  ING:[[0,0.8],[1.6,0.9]],
-  UNICREDIT:[[0,0.8],[0.8,0.9]],
-  RAIFFEISEN:[[0,0.8],[0.8,0.9]],
-  PATRIA:[[0,0.8],[0.8,1],[1.6,1.2],[2.4,1.4]],
-  'FIRST BANK':[[0,0.8]],
-  BRD:[[0,0.8]],
-  GARANTI:[[0,0.8]]
+/* ----- GRILE ----- */
+const percNP={PATRIA:1.2,UNICREDIT:2,'FIRST BANK':2,GARANTI:1.2,ING:0.4};
+const cat2Fixed={IP:0.4,NP:1};
+const praguriIP={
+ BCR:[[0,0.8],[0.8,0.9],[1.6,1],[2.4,1.2]],
+ ALPHA:[[0,0.8],[0.8,0.9],[1.6,1]],
+ ING:[[0,0.8],[1.6,0.9]],
+ UNICREDIT:[[0,0.8],[0.8,0.9]],
+ RAIFFEISEN:[[0,0.8],[0.8,0.9]],
+ PATRIA:[[0,0.8],[0.8,1],[1.6,1.2],[2.4,1.4]],
+ 'FIRST BANK':[[0,0.8]],BRD:[[0,0.8]],GARANTI:[[0,0.8]]
 };
-/* cat3 = jumătate din pragul obţinut; cat2 = 0.4 % */
 
-function clean(s){return s.replace(/["\[\]]/g,'').trim() || 'N/A';}
+/* ----- UTILS ----- */
+const clean=s=>s.replace(/["\[\]]/g,'').trim()||'N/A';
+const toNumber=s=>parseFloat(s.replace(/\./g,'').replace(',','.'))||0;
+const tbody=document.querySelector('#tbl tbody');
 
-/* --- UI helpers -----------------------------------------------------------*/
 function redraw(){
- const tb=document.querySelector('#t tbody');tb.innerHTML='';
+ tbody.innerHTML='';
  rows.forEach((r,i)=>{
-   tb.insertAdjacentHTML('beforeend',
-    `<tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
-     <td>${r.suma.toLocaleString('ro')}</td><td>${r.prov}</td>
-     <td>${r.proc? (r.proc*100).toFixed(2)+'%' :''}</td>
-     <td>${r.com? r.com.toLocaleString('ro',{minimumFractionDigits:2})+' RON':''}</td>
-     <td><button class="del" onclick="delRow(${i})">x</button></td></tr>`);
+  tbody.insertAdjacentHTML('beforeend',`
+   <tr><td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td><td>${r.tip}</td>
+   <td>${r.suma.toLocaleString('ro')}</td><td>${r.prov}</td>
+   <td>${r.proc? (r.proc*100).toFixed(2)+'%':''}</td>
+   <td>${r.com? r.com.toLocaleString('ro',{minimumFractionDigits:2}):''}</td>
+   <td><button class="del" onclick="delRow(${i})">x</button></td></tr>`);
  });
 }
-
-function delRow(i){rows.splice(i,1); redraw();}
+function delRow(i){rows.splice(i,1);redraw();}
 
 function addRow(){
  rows.push({
-   nume:clean(document.getElementById('numeClient').value),
-   banca:document.getElementById('banca').value.trim(),
-   tip:document.getElementById('tip').value.trim(),
-   suma:+document.getElementById('suma').value||0,
-   prov:document.getElementById('prov').value.trim()
+  nume:clean(document.getElementById('nume').value),
+  banca:document.getElementById('banca').value.trim(),
+  tip:document.getElementById('tip').value.trim(),
+  suma:toNumber(document.getElementById('suma').value),
+  prov:clean(document.getElementById('prov').value)
  });
  redraw();
 }
 
-/* --- CALCUL ---------------------------------------------------------------*/
 function catOf(p){
- if(/^TEOCREDIT$/i.test(p)||p.startsWith('TCC')) return 2;
- if(/^AGENT/i.test(p)) return 3;
- return 1; // Recomandari
+ p=p.toUpperCase();
+ if(p.includes('TEOCREDIT')||p.startsWith('TCC')) return 2;
+ if(p.startsWith('AGENT')) return 3;
+ return 1;
 }
-
-function getPrag(bank,totalMil){             // return procent Cat-1
- const v=praguriIP[bank]||[[0,0.8]];
- for(let [lim,p] of v) if(totalMil>=lim) var out=p;
- return out||0.008;
+function getPrag(bank,totMil){
+ let out=0.008;
+ (praguriIP[bank]||[[0,0.8]]).forEach(([lim,p])=>{if(totMil>=lim)out=p;});
+ return out;
 }
 
 function calculate(){
- let total=0,rez='';
- // grupăm pe bancă pentru IP
- const byBank={};
+ const byBank={};let total=0,rez='';
  rows.forEach(r=>{
-   if(r.tip.startsWith('IP')){
-     const cat=catOf(r.prov);
-     if(cat!==2){byBank[r.banca]=(byBank[r.banca]||0)+r.suma;}
-   }
+  if(r.tip.startsWith('IP') && catOf(r.prov)!==2)
+    byBank[r.banca]=(byBank[r.banca]||0)+r.suma;
  });
-
  rows.forEach(r=>{
-   const cat=catOf(r.prov);
-   let proc=0;
-   if(r.tip.startsWith('IP')){
-     if(cat===2) proc=0.004;
-     else{
-       const base=getPrag(r.banca,byBank[r.banca]/1e6);
-       proc= cat===3? base/2 : base;
-     }
-   }else{ // NP
-     if(cat===2) proc=0.01;
-     else proc=(percNP[r.banca]||0)/100;
-   }
-   r.proc=proc; r.com=r.suma*proc; total+=r.com;
+  const cat=catOf(r.prov);let proc=0;
+  if(r.tip.startsWith('IP')){
+    if(cat===2) proc=0.004;
+    else{
+      let base=getPrag(r.banca,byBank[r.banca]/1e6);
+      proc= cat===3? base/2 : base;
+    }
+  }else{
+    proc=cat===2? 0.01 : (percNP[r.banca]||0)/100;
+  }
+  r.proc=proc; r.com=r.suma*proc; total+=r.com;
  });
-
- // rezumat
  for(const b in byBank){
-   const p=getPrag(b,byBank[b]/1e6);
-   rez+=`${b}: total Cat1+3 = ${byBank[b].toLocaleString('ro')} RON → prag ${ (p*100).toFixed(2)}%\n`;
+  rez+=`${b}: total Cat1+3 = ${byBank[b].toLocaleString('ro')} RON → prag ${(getPrag(b,byBank[b]/1e6)*100).toFixed(2)}%\n`;
  }
  document.getElementById('tot').textContent=total.toLocaleString('ro',{minimumFractionDigits:2});
  document.getElementById('rez').textContent=rez;
  redraw();
 }
 
-/* --- CSV ------------------------------------------------------------------*/
+/* ----- CSV I/O ----- */
 function loadCSV(){
- const f=document.getElementById('csv').files[0]; if(!f) return;
+ const f=document.getElementById('csv').files[0]; if(!f)return;
  f.text().then(t=>{
-   t.split(/\r?\n/).forEach(l=>{
-     const [n,b,t,s,p]=l.split(',');
-     if(!b||isNaN(+s)) return;
-     rows.push({nume:clean(n),banca:clean(b),tip:clean(t),suma:+s,prov:clean(p)});
+  t.split(/\r?\n/).forEach(l=>{
+   const [n,b,t,s,p]=l.split(',');
+   if(b&&s) rows.push({
+    nume:clean(n),banca:clean(b),tip:clean(t),
+    suma:toNumber(s),prov:clean(p)
    });
-   redraw();
+  }); redraw();
  });
 }
 function exportCSV(){
  let out='Nume,Banca,Tip,Suma,Provider,Proc,Comision\n';
- rows.forEach(r=>out+=`${r.nume},${r.banca},${r.tip},${r.suma},${r.prov},${(r.proc*100).toFixed(2)}%,${r.com}\n`);
- download('borderou.csv',out);
+ rows.forEach(r=>{
+  out+=`${r.nume},${r.banca},${r.tip},${r.suma},${r.prov},${(r.proc*100).toFixed(2)}%,${r.com.toFixed(2)}\n`;
+ });
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([out],{type:'text/csv'}));
+ a.download='borderou.csv';a.click();URL.revokeObjectURL(a.href);
 }
-
 function exportXLSX(){
- if(typeof XLSX==='undefined'){alert('SheetJS nu s-a încărcat!');return;}
+ if(typeof XLSX==='undefined'){alert('SheetJS nu s-a încărcat – offline / CDN blocat');return;}
  const ws=XLSX.utils.json_to_sheet(rows.map(r=>({
   Nume:r.nume,Banca:r.banca,Tip:r.tip,Suma:r.suma,Provider:r.prov,
   Proc:(r.proc*100).toFixed(2)+'%',Comision:r.com.toFixed(2)
  })));
- const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Borderou');
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Borderou');
  XLSX.writeFile(wb,'borderou.xlsx');
 }
-function download(name,txt){
- const a=document.createElement('a');
- a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv'}));
- a.download=name; a.click(); URL.revokeObjectURL(a.href);
-}
 </script>
-</body>
-</html>
+</body></html>
