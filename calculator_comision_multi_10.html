@@ -1,231 +1,205 @@
 <!DOCTYPE html>
 <html lang="ro">
-<head>
-<meta charset="utf-8">
+<head><meta charset="utf-8">
 <title>Calculator comision</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;margin:0; padding:8px;background:#f8fdf8}
-  h1{margin:0 0 8px;color:#216c2a}
-  button,select,input[type="number"],input[type="text"]{font:14px Arial;padding:4px 6px;margin:2px}
-  table{width:100%;border-collapse:collapse;margin-top:6px}
-  th,td{border:1px solid #2d6d2e;padding:4px 6px;font-size:14px}
-  th{background:#2d6d2e;color:#fff;text-align:center}
-  tr:nth-child(even){background:#f5fff5}
-  .del{background:#d83131;border:none;color:#fff;padding:1px 7px;cursor:pointer}
-  .del:hover{background:#a41616}
-  #rez{font:14px/1.4 monospace;margin-top:6px}
+ *{box-sizing:border-box;font-family:system-ui,Arial}
+ body{margin:0;padding:1rem;background:#f6f8f9}
+ h1{margin:.2rem 0}
+ table{width:100%;border-collapse:collapse;margin-top:.6rem}
+ th,td{border:1px solid #8bb;border-left:0;border-right:0;padding:.35rem .5rem;font-size:.9rem}
+ th{background:#0a7d29;color:#fff;text-align:left}
+ tr:nth-child(even){background:#ecf5ee}
+ #toolbar{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem}
+ #toolbar input[type=text],#toolbar input[type=number]{padding:.25rem .35rem;font-size:.9rem;max-width:140px}
+ button{padding:.35rem .6rem;font-size:.85rem;border:0;border-radius:4px;cursor:pointer}
+ button.green{background:#149f3c;color:#fff}
+ button.orange{background:#f5a623;color:#fff}
+ .del{background:#d9534f;color:#fff;padding:.2rem .45rem;font-size:.8rem}
+ .right{text-align:right}
 </style>
 </head>
 <body>
 
 <h1>Calculator comision</h1>
 
-<!-- bara de date de intrare -->
-<button id="calc">Calculează</button>
+<div id="toolbar">
+  <button id="calcBtn" class="orange">Calculează</button>
 
-Nume agent <input id="agent"> 
-Luna (AAAA-LL) <input id="luna" value="2025-06"> 
-Nume client <input id="numeClient"> 
-Suma <input id="suma" type="number" value="0" style="width:80px">
+  <label>Nume agent <input type="text" id="agent"></label>
+  <label>Luna (AAAA-LL) <input type="text" id="luna" placeholder="2025-06"></label>
+  <label>Nume client <input type="text" id="client"></label>
+  <label>Suma <input type="number" id="suma" value="0"></label>
 
-<select id="bancaInp">
-  <option>BCR</option><option>BRD</option><option>ING</option>
-  <option>UNICREDIT</option><option>GARANTI</option>
-  <option>FIRST BANK</option><option>ALPHA</option>
-  <option>RAIFFEISEN</option>
-</select>
+  <select id="bancaSel">
+    <option>FIRST BANK</option><option>UNICREDIT BANK</option><option>RAIFFEISEN BANK</option>
+    <option>BCR</option><option>BRD</option><option>ING</option>
+    <option>GARANTI BANK</option><option>ALPHA BANK</option>
+  </select>
+  <select id="tipSel">
+    <option>IP</option><option>REF IP</option>
+    <option>NP</option><option>REF NP</option>
+    <option>NC</option><option>CC</option>
+  </select>
+  <select id="provSel">
+    <option>RECOMANDARI</option>
+    <option>TEOCREDIT</option>
+    <option>AGENT - DAF IMOBILIARE</option>
+    <option>TCC - ADAMA</option>
+  </select>
 
-<select id="tipInp">
-  <option>IP</option><option>REF IP</option>
-  <option>NP</option><option>REF NP</option>
-</select>
+  <button id="addBtn" class="green">Adaugă credit</button>
+  <input type="file" id="file" accept=".csv">
+  <button id="loadCSV" class="green">Încarcă CSV</button>
+  <button id="expCSV">Exportă CSV</button>
+  <button id="expXLSX">Exportă XLSX</button>
+</div>
 
-<select id="provInp">
-  <option>RECOMANDARI</option>
-  <option>TEOCREDIT</option>
-  <option>AGENT - NUMEAGENT</option>
-</select>
-
-<button id="add">Adaugă credit</button><br>
-
-<!-- încărcare / export -->
-<input type="file" id="filePick">
-<span id="fileName"></span>
-<button id="csvBtn">Încarcă CSV</button>
-<button id="expCsv">Exportă CSV</button>
-<button id="expXlsx">Exportă XLSX</button>
-
-<!-- tabel rezultate -->
 <table id="tbl">
   <thead>
-    <tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Suma</th>
-        <th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr>
+   <tr><th>#</th><th>Nume</th><th>Banca</th><th>Tip</th><th>Sumă</th><th>Provider</th><th>Proc.</th><th>Comision</th><th></th></tr>
   </thead>
   <tbody></tbody>
   <tfoot>
-    <tr><td colspan="7" style="text-align:right;font-weight:bold">Total câştig</td>
-        <td id="tot"></td><td></td></tr>
+   <tr><td colspan="7" class="right"><b>Total câştig</b></td><td id="tot" class="right"></td><td></td></tr>
   </tfoot>
 </table>
 
-<pre id="rez"></pre>
-
+<pre id="rezumat" style="font-size:.8rem"></pre>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 <script>
-const rows=[],
-      tbody=document.querySelector('#tbl tbody'),
-      totTd=document.getElementById('tot'),
-      rez=document.getElementById('rez');
-
-/* --- praguri BCR/BRD/ING/… (Cat.1+3) ----------------------------- */
-const PRAG_IP = {
-  BCR:  [[0, 0.8], [800_001,0.9], [1_600_001,1.0], [2_400_001,1.2],[5_000_001,1.4],[50_000_001,1.8]],
-  BRD:  [[0,0.8]],
-  ING:  [[0,0.8],[1_600_001,0.9]],
-  UNICREDIT:[[0,0.8],[800_001,0.9]],
-  GARANTI:[[0,0.8]],
-  'FIRST BANK':[[0,0.8]],
-  ALPHA:[[0,0.8],[800_001,0.9],[1_600_001,1.0]],
-  RAIFFEISEN:[[0,0.8],[800_001,0.9]]
+/* === praguri Cat 1/3 === */
+const PRAGURI = {
+  BCR:[[0,800000,0.008],[800001,1600000,0.009],[1600001,2400000,0.010],
+      [2400001,5_000_000,0.012],[5_000_001,50_000_000,0.014],[50_000_001,Infinity,0.018]],
+  FIRSTBANK:[[0,Infinity,0.008]],
+  UNICREDITBANK:[[0,800000,0.008],[800001,Infinity,0.009]],
+  RAIFFEISENBANK:[[0,800000,0.008],[800001,Infinity,0.009]],
+  ING:[[0,1_600_000,0.008],[1_600_001,Infinity,0.009]],
+  GARANTIBANK:[[0,Infinity,0.008]],
+  ALPHABANK:[[0,800000,0.008],[800001,1_600_000,0.009],[1_600_001,Infinity,0.010]],
+  BRD:[[0,Infinity,0.008]]
 };
-/* procente fixe pentru NP (Cat.1) şi Cat.2 */
-const NP_FIXED={PATRIA:1.2,UNICREDIT:2,FIRST:2,GARANTI:1.2,ING:0.4};
-const CAT2_IP = 0.4;          // toate băncile (IP)
-const CAT2_NP = 1.0;          // toate băncile (NP)
+/* alias (toUpperCase, fără spaţii) -> cheie */
+const BANK_ALIAS={
+ "FIRSTBANK":"FIRSTBANK",
+ "FIRST":"FIRSTBANK",
+ "UNICREDITBANK":"UNICREDITBANK","UNICREDIT":"UNICREDITBANK",
+ "RAIFFEISENBANK":"RAIFFEISENBANK","RAIFFEISEN":"RAIFFEISENBANK",
+ "GARANTIBANK":"GARANTIBANK","GARANTI":"GARANTIBANK",
+ "ALPHABANK":"ALPHABANK","ALPHA":"ALPHABANK",
+ "BRD":"BRD","BCR":"BCR","ING":"ING","INGBANK":"ING"
+};
+/* Cat 2 fix 0,4 % */
+const CAT2_PROC = 0.004;
 
-/* helper procent după prag */
-function procentIpotecar(bank,total){          // total = Cat1+3
-  const arr=PRAG_IP[bank]||[[0,0.8]];
-  let pct=arr[0][1];
-  for(const [lim,p] of arr) if(total>=lim) pct=p;
-  return pct/100;             // întorc 0.008 etc.
+/* ===== helpers ===== */
+const $=s=>document.querySelector(s);
+const rows=[];
+const tbody=$("#tbl tbody");
+const fmt=n=>n.toLocaleString("ro-RO",{maximumFractionDigits:2});
+const clean=s=>s.replace(/^[\s"'[\]]+|[\s"'[\]]+$/g,"").trim();
+const canon=b=>BANK_ALIAS[ clean(b).toUpperCase().replace(/\s+/g,"") ]||"";
+const providerCat=p=>
+  p.startsWith("TEOCREDIT")||p.startsWith("TCC -")?2 : p.startsWith("AGENT -")?3 :1;
+
+/* prag pt bancă */
+function pragBank(key,sum){
+ const arr=PRAGURI[key]||[[0,Infinity,0]];
+ return (arr.find(([mn,mx])=>sum>=mn&&sum<=mx)||[0,0,0])[2];
 }
 
-/* adăugare rând manual */
-document.getElementById('add').onclick=()=>{
-  const suma=parseFloat(document.getElementById('suma').value||0);
-  if(!suma) return;
-  rows.push({
-     nume:document.getElementById('numeClient').value||'N/A',
-     banca:document.getElementById('bancaInp').value,
-     tip: document.getElementById('tipInp').value,
-     suma,
-     prov:document.getElementById('provInp').value
-  });
-  render();
-};
-
-/* încărcare CSV */
-document.getElementById('csvBtn').onclick=async()=>{
-  const f=document.getElementById('filePick').files[0];
-  if(!f) return;
-  document.getElementById('fileName').textContent=f.name;
-  const text=await f.text();
-  text.trim().split(/\r?\n/).forEach(l=>{
-     const [n,b,t,s,p]=l.split(',');
-     if(!b||!s) return;
-     rows.push({
-       nume:n||'N/A',
-       banca:b.trim().replace(/^"+|"+$/g,''),
-       tip:  t.trim().replace(/^"+|"+$/g,''),
-       suma:parseFloat(s.replace(/[^\d.]/g,'')),
-       prov:(p||'').trim().replace(/^"+|"+$/g,'')
-     });
-  });
-  render();
-};
-
-/* export CSV */
-document.getElementById('expCsv').onclick=()=>{
-  const lines=[['Nume','Banca','Tip','Suma','Provider']];
-  rows.forEach(r=>lines.push([r.nume,r.banca,r.tip,r.suma,r.prov]));
-  const blob=new Blob([lines.map(a=>a.join(',')).join('\n')],{type:'text/csv'});
-  download(blob,'borderou.csv');
-};
-/* export XLSX */
-document.getElementById('expXlsx').onclick=()=>{
-  const ws=XLSX.utils.json_to_sheet(rows);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Borderou');
-  XLSX.writeFile(wb,'borderou.xlsx');
-};
-
-/* calcul procente & comision */
-document.getElementById('calc').onclick=render;
-
+/* ===== render ===== */
 function render(){
-  /* curăţă ghilimele duble */
-  rows.forEach(r=>{
-     ['nume','banca','tip','prov'].forEach(k=>{
-        r[k]=r[k].replace(/^"+|"+$/g,'').replace(/""/g,'"');
-     });
-  });
+ /* sume Cat1+3 pe bancă */
+ const bankSum={};
+ rows.forEach(r=>{
+   if(providerCat(r.prov)!==2){
+      bankSum[r.bKey]=(bankSum[r.bKey]||0)+r.suma;
+   }
+ });
+ /* calc proc+com */
+ let total=0;
+ rows.forEach(r=>{
+   let p=0;
+   const cat=providerCat(r.prov);
+   if(r.tip.startsWith("NP")){
+       p = cat===2?0.01 : cat===3?0.012 : 0.008;
+   }else{
+       if(cat===2)      p=CAT2_PROC;
+       else if(cat===3) p=pragBank(r.bKey,bankSum[r.bKey])/2;
+       else             p=pragBank(r.bKey,bankSum[r.bKey]);
+   }
+   r.proc=p; r.com=r.suma*p; total+=r.com;
+ });
 
-  /* total Cat1+3 per bancă */
-  const cat13={};
-  rows.forEach(r=>{
-     if(r.prov!=='TEOCREDIT') cat13[r.banca]=(cat13[r.banca]||0)+r.suma;
-  });
+ /* tabel */
+ tbody.innerHTML="";
+ rows.forEach((r,i)=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${i+1}</td><td>${r.nume}</td><td>${r.banca}</td>
+  <td>${r.tip}</td><td class="right">${fmt(r.suma)}</td><td>${r.prov}</td>
+  <td class="right">${(r.proc*100).toFixed(2)}%</td>
+  <td class="right">${fmt(r.com)} RON</td>
+  <td><button class="del" data-i=${i}>x</button></td>`;
+  tbody.appendChild(tr);
+ });
+ $("#tot").textContent = fmt(total);
 
-  let total=0;
-  rows.forEach(r=>{
-     let pct=0;
-     const tip=r.tip.toUpperCase();
-     const bank=r.banca.toUpperCase();
-
-     /* determin categorie */
-     if(r.prov==='TEOCREDIT'){                         // CATEGORIA 2
-        pct = /(NP|NEVOI)/.test(tip)? CAT2_NP/100 : CAT2_IP/100;
-     }else if(/^AGENT\b/i.test(r.prov)){               // CATEGORIA 3
-        const base=procentIpotecar(bank,cat13[bank]||0);
-        pct = base/2;                                  // jumătate din Cat1
-     }else{                                            // CATEGORIA 1
-        if(/(NP|NEVOI)/.test(tip)){                    // NP / REF NP
-            pct = (NP_FIXED[bank]||0.8)/100;
-        }else{                                         // IP / REF IP
-            pct = procentIpotecar(bank,cat13[bank]||0);
-        }
-     }
-     r.proc=pct;
-     r.com=r.suma*pct;
-     total+=r.com;
-  });
-
-  /* afişare tabel */
-  tbody.innerHTML='';
-  rows.forEach((r,i)=>{
-    const tr=tbody.insertRow();
-    tr.insertCell().textContent=i+1;
-    tr.insertCell().textContent=r.nume;
-    tr.insertCell().textContent=r.banca;
-    tr.insertCell().textContent=r.tip;
-    tr.insertCell().textContent=r.suma.toLocaleString('ro-RO');
-    tr.insertCell().textContent=r.prov;
-    tr.insertCell().textContent=(r.proc*100).toFixed(2)+'%';
-    tr.insertCell().textContent=r.com? r.com.toLocaleString('ro-RO',{minimumFractionDigits:2})+' RON':'';
-    const del=tr.insertCell();
-    const b=document.createElement('button');
-    b.textContent='x';b.className='del';
-    b.onclick=()=>{rows.splice(i,1);render()};
-    del.appendChild(b);
-  });
-  totTd.textContent=total?total.toLocaleString('ro-RO',{minimumFractionDigits:2}):'';
-
-  /* rezumat praguri */
-  let out='';
-  for(const b in cat13){
-     const pct=(procentIpotecar(b,cat13[b])*100).toFixed(2);
-     out+=`${b}: total Cat1+3 = ${cat13[b].toLocaleString('ro-RO')} RON → prag ${pct}%\n`;
-  }
-  rez.textContent=out;
+ /* rezumat */
+ let rez=""; Object.entries(bankSum).forEach(([k,s])=>{
+   rez += `${k.replace(/BANK$/,"")}: total Cat1+3 = ${fmt(s)} RON → prag ${(pragBank(k,s)*100).toFixed(2)}%\n`;
+ });
+ $("#rezumat").textContent=rez;
 }
+document.addEventListener("click",e=>{
+ if(e.target.classList.contains("del")){rows.splice(+e.target.dataset.i,1);render();}
+});
+$("#addBtn").onclick=()=>{
+ const suma=+$("#suma").value; if(!suma)return;
+ rows.push({
+   nume:$("#client").value||"N/A",
+   banca:$("#bancaSel").value,
+   bKey:canon($("#bancaSel").value),
+   tip:$("#tipSel").value,
+   suma,
+   prov:$("#provSel").value
+ }); render();
+};
+$("#calcBtn").onclick=render;
 
-/* utilitate descărcare */
-function download(blob,name){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=name;
-  document.body.appendChild(a);a.click();a.remove();
+/* ===== CSV ===== */
+function csvRows(txt){
+ const out=[]; txt.split(/\r?\n/).forEach((l,i)=>{
+  if(!l.trim())return;
+  const [n,b,t,s,p]=l.split(",");
+  if(i===0 && l.toLowerCase().includes("lastname")) return; // skip header fals
+  const suma=parseFloat(s.replace(/\./g,"").replace(",","."));
+  if(!suma)return;
+  out.push({nume:clean(n)||"N/A",banca:clean(b),bKey:canon(b),
+            tip:clean(t),suma,prov:clean(p)});
+ });
+ return out;
 }
+$("#loadCSV").onclick=()=>{
+ const f=$("#file").files[0]; if(!f)return;
+ const fr=new FileReader();
+ fr.onload=e=>{ rows.length=0; rows.push(...csvRows(e.target.result)); render(); };
+ fr.readAsText(f);
+};
+/* export */
+$("#expCSV").onclick=()=>{
+ const csv="Nume,Banca,Tip,Suma,Provider\n"+
+           rows.map(r=>[r.nume,r.banca,r.tip,r.suma,r.prov].join(",")).join("\n");
+ const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob([csv])),download:"comisioane.csv"});
+ a.click(); URL.revokeObjectURL(a.href);
+};
+$("#expXLSX").onclick=()=>{
+ if(typeof XLSX==="undefined"){alert("SheetJS nu e disponibil");return;}
+ const ws=XLSX.utils.json_to_sheet(rows);
+ const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Borderou");
+ XLSX.writeFile(wb,"comisioane.xlsx");
+};
 </script>
 </body>
 </html>
