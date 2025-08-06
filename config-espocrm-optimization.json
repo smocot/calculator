@@ -1,0 +1,212 @@
+{
+    "espocrm_optimization": {
+        "version": "1.0.0",
+        "description": "EspoCRM Task Optimization for Call Center Agents",
+        "requirements": {
+            "rc1": {
+                "name": "Hide Completed Tasks",
+                "description": "Eliminarea din listă a 100% din sarcinile finalizate (de la 100% vizibile → 0%)",
+                "status": "implemented",
+                "implementation": "Frontend and API filtering excludes status='completed'",
+                "test_endpoint": "/api/espo-crm-api.php/tasks",
+                "validation": "Assert no tasks with status='completed' in response"
+            },
+            "rc2": {
+                "name": "Dynamic Task Coloring",
+                "description": "Colorarea dinamică a sarcinilor active, nefinalizate și blocate (de la 0% → 100%)",
+                "status": "implemented",
+                "color_scheme": {
+                    "active": "#27ae60",
+                    "pending": "#f39c12", 
+                    "blocked": "#e74c3c",
+                    "urgent": "#dc3545"
+                },
+                "css_classes": [
+                    "task-active",
+                    "task-pending", 
+                    "task-blocked",
+                    "task-urgent"
+                ]
+            }
+        },
+        "features": {
+            "agent_interface": {
+                "enabled": true,
+                "header_info": true,
+                "real_time_stats": true,
+                "responsive_design": true
+            },
+            "call_center_integration": {
+                "enabled": true,
+                "call_panel": true,
+                "call_timer": true,
+                "call_statistics": true,
+                "phone_integration": "simulated"
+            },
+            "filtering_system": {
+                "status_filters": ["all", "active", "pending", "blocked", "urgent"],
+                "search_fields": ["title", "customer", "description"],
+                "sorting": "priority_date_based"
+            },
+            "notifications": {
+                "urgent_tasks": true,
+                "completion_alerts": true,
+                "auto_dismiss_time": 5000
+            }
+        },
+        "api_configuration": {
+            "base_url": "/api/espo-crm-api.php",
+            "endpoints": {
+                "get_tasks": {
+                    "method": "GET",
+                    "path": "/tasks",
+                    "params": ["status", "priority", "search"],
+                    "response_format": "json"
+                },
+                "update_task": {
+                    "method": "PUT", 
+                    "path": "/tasks/{id}",
+                    "body_format": "json"
+                },
+                "start_call": {
+                    "method": "POST",
+                    "path": "/start-call",
+                    "required_fields": ["taskId", "phoneNumber"]
+                },
+                "end_call": {
+                    "method": "POST",
+                    "path": "/end-call",
+                    "required_fields": ["callId", "duration"]
+                },
+                "get_stats": {
+                    "method": "GET",
+                    "path": "/stats"
+                },
+                "get_report": {
+                    "method": "GET",
+                    "path": "/report",
+                    "params": ["date"]
+                }
+            }
+        },
+        "database_integration": {
+            "type": "simulated",
+            "tables": {
+                "tasks": "simulated_array",
+                "call_logs": "simulated_array"
+            },
+            "real_espocrm_integration": {
+                "enabled": false,
+                "tables": {
+                    "tasks": "task",
+                    "calls": "call", 
+                    "accounts": "account",
+                    "contacts": "contact"
+                },
+                "connection": {
+                    "host": "localhost",
+                    "database": "espocrm",
+                    "username": "espocrm_user",
+                    "password": "espocrm_password"
+                }
+            }
+        },
+        "ui_customization": {
+            "theme": {
+                "primary_color": "#3498db",
+                "success_color": "#27ae60", 
+                "warning_color": "#f39c12",
+                "danger_color": "#e74c3c",
+                "gradient_background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            },
+            "animations": {
+                "enabled": true,
+                "duration": "0.3s",
+                "easing": "ease",
+                "pulse_animation": "2s infinite"
+            },
+            "responsive_breakpoints": {
+                "mobile": "768px",
+                "tablet": "1024px",
+                "desktop": "1200px"
+            }
+        },
+        "performance": {
+            "caching": {
+                "enabled": false,
+                "ttl": 300
+            },
+            "pagination": {
+                "enabled": false,
+                "per_page": 50
+            },
+            "real_time_updates": {
+                "enabled": true,
+                "interval": 30000
+            }
+        },
+        "security": {
+            "cors": {
+                "enabled": true,
+                "allow_origin": "*",
+                "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"]
+            },
+            "authentication": {
+                "required": false,
+                "type": "bearer_token"
+            },
+            "rate_limiting": {
+                "enabled": false,
+                "requests_per_minute": 60
+            }
+        },
+        "logging": {
+            "enabled": true,
+            "level": "info",
+            "log_file": "/var/log/espocrm-optimization.log",
+            "log_actions": [
+                "task_completed",
+                "call_started", 
+                "call_ended",
+                "task_updated"
+            ]
+        },
+        "monitoring": {
+            "health_check": {
+                "enabled": true,
+                "endpoint": "/health",
+                "checks": ["database", "api_response_time"]
+            },
+            "metrics": {
+                "enabled": true,
+                "track": [
+                    "api_response_time",
+                    "task_completion_rate",
+                    "call_success_rate",
+                    "agent_productivity"
+                ]
+            }
+        },
+        "deployment": {
+            "environment": "development",
+            "debug_mode": true,
+            "asset_optimization": false,
+            "minification": false
+        },
+        "browser_compatibility": {
+            "minimum_versions": {
+                "chrome": "80",
+                "firefox": "75", 
+                "safari": "13",
+                "edge": "80"
+            },
+            "features_required": [
+                "es6",
+                "fetch",
+                "css_grid",
+                "css_flexbox"
+            ]
+        }
+    }
+}

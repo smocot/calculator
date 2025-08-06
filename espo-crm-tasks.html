@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EspoCRM - Sarcini Optimizate pentru Agenți</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .agent-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+
+        .controls {
+            padding: 25px 30px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #3498db;
+            background: white;
+            color: #3498db;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 10px 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            padding: 5px 10px;
+            width: 250px;
+            font-size: 14px;
+        }
+
+        .task-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 15px;
+            border-radius: 10px;
+            min-width: 80px;
+        }
+
+        .stat-active { background: #e8f5e8; color: #27ae60; }
+        .stat-pending { background: #fff3cd; color: #f39c12; }
+        .stat-blocked { background: #f8d7da; color: #e74c3c; }
+
+        .tasks-container {
+            padding: 0 30px 30px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        /* RC#2: Colorarea dinamică a sarcinilor */
+        .task-active {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+            border-left-color: #27ae60;
+        }
+
+        .task-pending {
+            background: linear-gradient(135deg, #fff3cd 0%, #fef9e7 100%);
+            border-left-color: #f39c12;
+        }
+
+        .task-blocked {
+            background: linear-gradient(135deg, #f8d7da 0%, #fce4e6 100%);
+            border-left-color: #e74c3c;
+        }
+
+        .task-urgent {
+            background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
+            border-left-color: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .task-priority {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+
+        .priority-high { background: #e74c3c; }
+        .priority-medium { background: #f39c12; }
+        .priority-low { background: #95a5a6; }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .task-details {
+            display: flex;
+            gap: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .task-description {
+            color: #5a6c7d;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-call {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-call:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-complete {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .call-center-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px;
+            width: 300px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .call-center-panel.collapsed {
+            transform: translateY(-50%) translateX(260px);
+        }
+
+        .panel-toggle {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 60px;
+            border-radius: 10px 0 0 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .call-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .call-display {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .call-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .call-btn.start {
+            background: #27ae60;
+            color: white;
+        }
+
+        .call-btn.end {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .call-btn.hold {
+            background: #f39c12;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group,
+            .task-stats {
+                justify-content: center;
+            }
+
+            .call-center-panel {
+                position: relative;
+                right: auto;
+                top: auto;
+                transform: none;
+                width: 100%;
+                margin-top: 20px;
+            }
+
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .task-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-tasks"></i>
+                Sarcini CRM - Optimizat pentru Agenți
+            </h1>
+            <div class="agent-info">
+                <i class="fas fa-user-circle"></i>
+                <div>
+                    <div style="font-weight: 600;">Agent: Ion Popescu</div>
+                    <div style="font-size: 12px; opacity: 0.8;">ID: AG001 | Echipa: Vânzări</div>
+                </div>
+                <div style="background: rgba(39, 174, 96, 0.2); padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                    <i class="fas fa-circle" style="color: #27ae60; font-size: 8px;"></i> Online
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-list"></i> Toate
+                </button>
+                <button class="filter-btn" data-filter="active">
+                    <i class="fas fa-play"></i> Active
+                </button>
+                <button class="filter-btn" data-filter="pending">
+                    <i class="fas fa-clock"></i> În Așteptare
+                </button>
+                <button class="filter-btn" data-filter="blocked">
+                    <i class="fas fa-ban"></i> Blocate
+                </button>
+                <button class="filter-btn" data-filter="urgent">
+                    <i class="fas fa-exclamation-triangle"></i> Urgente
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Caută sarcini..." id="searchInput">
+            </div>
+
+            <div class="task-stats">
+                <div class="stat-item stat-active">
+                    <div style="font-size: 24px; font-weight: bold;" id="activeCount">12</div>
+                    <div style="font-size: 12px;">Active</div>
+                </div>
+                <div class="stat-item stat-pending">
+                    <div style="font-size: 24px; font-weight: bold;" id="pendingCount">8</div>
+                    <div style="font-size: 12px;">În Așteptare</div>
+                </div>
+                <div class="stat-item stat-blocked">
+                    <div style="font-size: 24px; font-weight: bold;" id="blockedCount">3</div>
+                    <div style="font-size: 12px;">Blocate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tasks-container" id="tasksContainer">
+            <!-- Sarcinile vor fi generate dinamic -->
+        </div>
+    </div>
+
+    <!-- Call Center Panel -->
+    <div class="call-center-panel" id="callPanel">
+        <button class="panel-toggle" onclick="toggleCallPanel()">
+            <i class="fas fa-phone"></i>
+        </button>
+        
+        <h3 style="margin-bottom: 15px; color: #2c3e50;">
+            <i class="fas fa-headset"></i> Call Center
+        </h3>
+        
+        <div class="call-display">
+            <div id="callStatus">Pregătit pentru apel</div>
+            <div id="callTimer" style="font-size: 24px; margin-top: 10px;">00:00</div>
+        </div>
+        
+        <div class="call-controls">
+            <button class="call-btn start" onclick="startCall()">
+                <i class="fas fa-phone"></i> Inițiază Apel
+            </button>
+            <button class="call-btn hold" onclick="holdCall()" style="display: none;" id="holdBtn">
+                <i class="fas fa-pause"></i> Pune în Așteptare
+            </button>
+            <button class="call-btn end" onclick="endCall()" style="display: none;" id="endBtn">
+                <i class="fas fa-phone-slash"></i> Închide Apel
+            </button>
+        </div>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h4 style="margin-bottom: 10px; color: #2c3e50;">Apeluri Astăzi</h4>
+            <div style="font-size: 14px; color: #7f8c8d;">
+                Total: <strong>24</strong> | Reușite: <strong>18</strong> | În Așteptare: <strong>2</strong>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 75%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // RC#1: Eliminarea din listă a 100% din sarcinile finalizate
+        // RC#2: Colorarea dinamică a sarcinilor active, nefinalizate și blocate
+        
+        const tasks = [
+            {
+                id: 1,
+                title: "Apel client - Ionescu Maria",
+                description: "Discutare ofertă pachet premium, urmărire contract",
+                status: "active",
+                priority: "high",
+                dueDate: "2024-01-15",
+                customer: "Ionescu Maria",
+                phone: "+40722123456",
+                type: "call",
+                progress: 60
+            },
+            {
+                id: 2,
+                title: "Follow-up contract Popescu SRL",
+                description: "Verificare semnături și documentație completă",
+                status: "pending",
+                priority: "medium",
+                dueDate: "2024-01-16",
+                customer: "Popescu SRL",
+                phone: "+40721987654",
+                type: "meeting",
+                progress: 30
+            },
+            {
+                id: 3,
+                title: "Rezolvare reclamație - Georgescu",
+                description: "Client nemulțumit de servicii, necesită intervenție urgentă",
+                status: "urgent",
+                priority: "high",
+                dueDate: "2024-01-15",
+                customer: "Georgescu Andrei",
+                phone: "+40734567890",
+                type: "support",
+                progress: 10
+            },
+            {
+                id: 4,
+                title: "Prezentare produs nou - Startup Tech",
+                description: "Demo platformă CRM, estimare buget 50.000 RON",
+                status: "blocked",
+                priority: "high",
+                dueDate: "2024-01-17",
+                customer: "Startup Tech",
+                phone: "+40744123789",
+                type: "demo",
+                progress: 0,
+                blockReason: "Așteptăm aprobare manager"
+            },
+            {
+                id: 5,
+                title: "Actualizare date client - Radu Industries",
+                description: "Modificare adresă de facturare și contact principal",
+                status: "active",
+                priority: "low",
+                dueDate: "2024-01-18",
+                customer: "Radu Industries",
+                phone: "+40755666777",
+                type: "update",
+                progress: 80
+            },
+            {
+                id: 6,
+                title: "Negociere contract anual - MegaCorp",
+                description: "Discutare termeni pentru contract de 1 milion RON",
+                status: "pending",
+                priority: "high",
+                dueDate: "2024-01-16",
+                customer: "MegaCorp SA",
+                phone: "+40766888999",
+                type: "negotiation",
+                progress: 45
+            }
+            // Sarcinile finalizate NU vor fi afișate (RC#1)
+        ];
+
+        let currentFilter = 'all';
+        let callTimer = 0;
+        let callInterval = null;
+        let isCallActive = false;
+
+        function renderTasks() {
+            const container = document.getElementById('tasksContainer');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            // RC#1: Filtrare completă a sarcinilor finalizate
+            let filteredTasks = tasks.filter(task => task.status !== 'completed');
+            
+            if (currentFilter !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.status === currentFilter);
+            }
+            
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(task => 
+                    task.title.toLowerCase().includes(searchTerm) ||
+                    task.customer.toLowerCase().includes(searchTerm) ||
+                    task.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Nu există sarcini</h3>
+                        <p>Nu s-au găsit sarcini care să corespundă criteriilor selectate.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredTasks.map(task => `
+                <div class="task-item ${getTaskClass(task)}" data-task-id="${task.id}">
+                    <div class="task-priority ${getPriorityClass(task.priority)}">
+                        ${getPriorityIcon(task.priority)}
+                    </div>
+                    
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-details">
+                            <span><i class="fas fa-user"></i> ${task.customer}</span>
+                            <span><i class="fas fa-phone"></i> ${task.phone}</span>
+                            <span><i class="fas fa-calendar"></i> ${formatDate(task.dueDate)}</span>
+                            <span class="task-type">
+                                <i class="fas ${getTypeIcon(task.type)}"></i> 
+                                ${getTypeLabel(task.type)}
+                            </span>
+                        </div>
+                        <div class="task-description">${task.description}</div>
+                        ${task.blockReason ? `<div style="color: #e74c3c; font-size: 12px; margin-top: 5px;"><i class="fas fa-exclamation-circle"></i> ${task.blockReason}</div>` : ''}
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${task.progress}%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        <button class="action-btn btn-call" onclick="callCustomer('${task.phone}', '${task.customer}')">
+                            <i class="fas fa-phone"></i> Apel
+                        </button>
+                        <button class="action-btn btn-edit" onclick="editTask(${task.id})">
+                            <i class="fas fa-edit"></i> Editează
+                        </button>
+                        <button class="action-btn btn-complete" onclick="completeTask(${task.id})">
+                            <i class="fas fa-check"></i> Finalizează
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateStats();
+        }
+
+        // RC#2: Colorarea dinamică a sarcinilor
+        function getTaskClass(task) {
+            switch(task.status) {
+                case 'active': return 'task-active';
+                case 'pending': return 'task-pending';
+                case 'blocked': return 'task-blocked';
+                case 'urgent': return 'task-urgent';
+                default: return 'task-active';
+            }
+        }
+
+        function getPriorityClass(priority) {
+            return `priority-${priority}`;
+        }
+
+        function getPriorityIcon(priority) {
+            switch(priority) {
+                case 'high': return '!!!';
+                case 'medium': return '!!';
+                case 'low': return '!';
+                default: return '!';
+            }
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                'call': 'fa-phone',
+                'meeting': 'fa-handshake',
+                'support': 'fa-life-ring',
+                'demo': 'fa-presentation',
+                'update': 'fa-sync-alt',
+                'negotiation': 'fa-comments-dollar'
+            };
+            return icons[type] || 'fa-tasks';
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                'call': 'Apel',
+                'meeting': 'Întâlnire',
+                'support': 'Suport',
+                'demo': 'Demo',
+                'update': 'Actualizare',
+                'negotiation': 'Negociere'
+            };
+            return labels[type] || 'Sarcină';
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ro-RO');
+        }
+
+        function updateStats() {
+            const activeCount = tasks.filter(t => t.status === 'active').length;
+            const pendingCount = tasks.filter(t => t.status === 'pending').length;
+            const blockedCount = tasks.filter(t => t.status === 'blocked').length;
+            
+            document.getElementById('activeCount').textContent = activeCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('blockedCount').textContent = blockedCount;
+        }
+
+        // Filtrare sarcini
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderTasks();
+            });
+        });
+
+        // Căutare
+        document.getElementById('searchInput').addEventListener('input', renderTasks);
+
+        // Call Center Functions
+        function toggleCallPanel() {
+            const panel = document.getElementById('callPanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        function callCustomer(phone, customerName) {
+            if (isCallActive) {
+                alert('Un apel este deja în desfășurare!');
+                return;
+            }
+            
+            document.getElementById('callStatus').textContent = `Apel către: ${customerName}`;
+            startCall();
+        }
+
+        function startCall() {
+            if (isCallActive) return;
+            
+            isCallActive = true;
+            callTimer = 0;
+            
+            document.querySelector('.call-btn.start').style.display = 'none';
+            document.getElementById('holdBtn').style.display = 'block';
+            document.getElementById('endBtn').style.display = 'block';
+            
+            callInterval = setInterval(() => {
+                callTimer++;
+                const minutes = Math.floor(callTimer / 60);
+                const seconds = callTimer % 60;
+                document.getElementById('callTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+            
+            document.getElementById('callStatus').textContent = 'Apel în desfășurare...';
+        }
+
+        function holdCall() {
+            if (callInterval) {
+                clearInterval(callInterval);
+                callInterval = null;
+                document.getElementById('callStatus').textContent = 'Apel în așteptare';
+                document.getElementById('holdBtn').innerHTML = '<i class="fas fa-play"></i> Reiau';
+                document.getElementById('holdBtn').onclick = resumeCall;
+            }
+        }
+
+        function resumeCall() {
+            startCall();
+            document.getElementById('holdBtn').innerHTML = '<i class="fas fa-pause"></i> Pune în Așteptare';
+            document.getElementById('holdBtn').onclick = holdCall;
+        }
+
+        function endCall() {
+            isCallActive = false;
+            
+            if (callInterval) {
+                clearInterval(callInterval);
+                callInterval = null;
+            }
+            
+            document.querySelector('.call-btn.start').style.display = 'block';
+            document.getElementById('holdBtn').style.display = 'none';
+            document.getElementById('endBtn').style.display = 'none';
+            
+            document.getElementById('callStatus').textContent = 'Pregătit pentru apel';
+            document.getElementById('callTimer').textContent = '00:00';
+            
+            // Simulare actualizare statistici după apel
+            setTimeout(() => {
+                alert('Apel finalizat! Vrei să adaugi note sau să programezi un follow-up?');
+            }, 500);
+        }
+
+        function editTask(taskId) {
+            alert(`Editare sarcină #${taskId} - Funcționalitate în dezvoltare`);
+        }
+
+        function completeTask(taskId) {
+            // RC#1: Sarcina finalizată va fi eliminată complet din listă
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].status = 'completed';
+                tasks[taskIndex].progress = 100;
+                renderTasks(); // Re-render pentru a elimina sarcina finalizată
+                
+                setTimeout(() => {
+                    alert('Sarcină finalizată cu succes! A fost eliminată din listă.');
+                }, 300);
+            }
+        }
+
+        // Inițializare aplicație
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            
+            // Simulare notificări în timp real
+            setTimeout(() => {
+                if (tasks.length > 0) {
+                    const urgentTask = tasks.find(t => t.status === 'urgent');
+                    if (urgentTask) {
+                        // Notification pentru sarcină urgentă
+                        const notification = document.createElement('div');
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+                            color: white;
+                            padding: 15px 20px;
+                            border-radius: 10px;
+                            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                            z-index: 10000;
+                            animation: slideIn 0.5s ease;
+                            max-width: 300px;
+                        `;
+                        notification.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Sarcină Urgentă!</strong><br>
+                                    <small>${urgentTask.title}</small>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(notification);
+                        
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 5000);
+                    }
+                }
+            }, 3000);
+        });
+
+        // CSS pentru animație notificare
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
